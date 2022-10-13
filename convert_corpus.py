@@ -4,14 +4,14 @@ import os
 # or adjust code to run over directories as well and take name from dir as time-variable
 
 dn = os.path.abspath('convert_corpus.py')
-txt_src = os.path.join(os.path.dirname(dn),'corpora\dta\Belletristik\\1800')
+txt_src = os.path.join(os.path.dirname(dn),'corpora\dta\Belletristik\\1600')
 output_src = os.path.join(os.path.dirname(dn),'corpora\processed') #albertinus_landtstoertzer01_1615.txt')
 
 
 #read_file = pd.read_csv (os.path.join(txt_src,'albertinus_landtstoertzer01_1615.txt'),sep=".\\n",header=None)
 #read_file.to_csv (os.path.join(output_src,'merged_file.csv'), index=None)
 
-with open(os.path.join(output_src,'1800_corpus_proc.csv'), 'w+') as outfile: #w+ should delete file content
+with open(os.path.join(output_src,'1600_corpus_proc.csv'), 'w+') as outfile: #w+ should delete file content
     for file in os.listdir(txt_src):
         if file.endswith(".txt"): 
             file_path = f"{txt_src}\{file}"
@@ -31,9 +31,9 @@ with open(os.path.join(output_src,'1800_corpus_proc.csv'), 'w+') as outfile: #w+
             df = df.replace("Ö","Oe",regex=True)
             df = df.replace("Ü","Ue",regex=True)
             df = df.replace("ß","ss",regex=True)
-            df['year']="1800"
-            #df.insert(1, 'year', '1800')
-            df.to_csv(os.path.join(output_src,'1800_corpus_proc.csv'),mode="a",index=False)
+            df['year']="1600"
+            #df.insert(1, 'year', '1600')
+            df.to_csv(os.path.join(output_src,'1600_corpus_proc.csv'),mode="a",index=False)
             #df.to_csv(output_path)
 
 ## randomize documents

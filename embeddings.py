@@ -70,6 +70,6 @@ word2v_model.train(sentences,
                     callbacks=[loss_logger],
                     compute_loss=True,
                     epochs=10)
-word2v_model.save("models\\1600_word2vec.model")#saving model
+word2v_model.save("models\\1800_word2vec.model")#saving model
 word_vectors=word2v_model.wv
-word_vectors.save("models\\vectors\\1600_word2vec.wordvectors") 
+word_vectors.save("models\\vectors\\1800_word2vec.wordvectors") 
