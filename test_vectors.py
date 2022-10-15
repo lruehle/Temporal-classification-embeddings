@@ -2,6 +2,7 @@ from codecs import utf_8_decode, utf_8_encode
 from gensim import similarities
 from gensim.models import KeyedVectors
 from gensim.models.word2vec import Word2Vec
+from pathlib import Path
 import align_embeddings
 import os
 
@@ -17,15 +18,21 @@ def load_vec(path):
 dn = os.path.abspath('test_vectors.py')
 dir_embed= os.path.join(os.path.dirname(dn),'aligned')
 base_path = os.path.join(os.path.dirname(dn),'models\\1600_word2vec.model')
+model_path = os.path.join(os.path.dirname(dn),'models')
 
-for n, file in enumerate(os.listdir(base_path,dir_embed)):
+for n, file in enumerate(os.listdir(model_path)):
+    #filter out dirs
     if file.endswith(".model"):
-        path= os.path.relpath(os.path.join(dir_embed,file))
-        model_base = load_model(base_path)
-        model_to_align = load_model(os.path.abspath(file))
-        save_path = os.path.join("aligned\\"+os.path.splitext(os.path.abspath(file))[0]+"_aligned.model")
-        #aligned_model= align_embeddings.smart_procrustes_align_gensim(model_base, model_to_align)
-        #aligned_model.save("aligned\\"+file+"_word2vec.model")
+        #path= os.path.relpath(os.path.join(dir_embed,file))
+        if(file != os.path.basename(base_path)):#"1600_word2vec.model"):
+            model_base = load_model(base_path)
+            load_path = os.path.join(model_path,file)
+            model_to_align = load_model(load_path)
+            save_path = os.path.join(dir_embed,Path(os.path.basename(file)).stem+"_aligned.model")
+            #align models
+            aligned_model= align_embeddings.smart_procrustes_align_gensim(model_base, model_to_align)
+            aligned_model.save(save_path)
+            base_path = save_path
 
 
 #model = load_model("aligned\\1700_word2vec.model")
