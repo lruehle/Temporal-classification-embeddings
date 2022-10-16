@@ -1,25 +1,39 @@
 import pandas as pd
 import os
+from smart_open import open
+from nltk.corpus import stopwords
+from gensim.utils import simple_preprocess
+############## new Version, needs testint! ##############
 # rerun for different time folders
 # or adjust code to run over directories as well and take name from dir as time-variable
+# No.1 in processing pipeline
+
 
 dn = os.path.abspath('convert_corpus.py')
 txt_src = os.path.join(os.path.dirname(dn),'corpora\dta\Belletristik\\1600')
 output_src = os.path.join(os.path.dirname(dn),'corpora\processed') #albertinus_landtstoertzer01_1615.txt')
+stop_words = stopwords.words('german')
 
+def remove_stop_words(txt):
+    token = txt.split()
+    return ' '.join([w for w in token if not w in stop_words])
+    
+def preproc(txt):
+    return simple_preprocess(txt,deacc=True,min_len=3, max_len=20)
 
-##alternative: write data from files to year_file & then process
+##alternative: write data from files to year_file & then process all at once
 def proc_files_in_dir(txt_src,output_src,year):
     with open(os.path.join(output_src,year+'_corpus_proc.csv'), 'w+') as outfile: #w+ should delete file content
         for file in os.listdir(txt_src):
             if file.endswith(".txt"): 
                 file_path = f"{txt_src}\{file}"
-                #output_path = f"{output_src}\{file}"
-                #df = pd.read_fwf(file_path)
                 df = pd.read_csv(file_path, sep=".\\n", header=None,names=["txt","year"]) 
+                df= df[df['txt'].str.count(' ') > 2] #drop lines with only one or two words -> references to role/active speaker etc.
+                ###new
+                df['txt'] = df['txt'].apply(remove_stop_words)
+                df['tokenized'] = df['txt'].map(preproc)
+                ####
                 df = df.replace("/|,|[^\w\s]","",regex=True)
-                df= df[df['txt'].str.count(' ') > 2]#drop lines with only one or two words -> references to role/active speaker etc.
-                #convert all to lower() done in simple preprocessing at model level
                 df = df.replace('\d+', '',regex=True)
                 df = df.replace("ä","ae",regex=True)
                 df = df.replace("ö","oe",regex=True)
@@ -28,11 +42,13 @@ def proc_files_in_dir(txt_src,output_src,year):
                 df = df.replace("Ö","Oe",regex=True)
                 df = df.replace("Ü","Ue",regex=True)
                 df = df.replace("ß","ss",regex=True)
-                df['year']=year
+                df['year']= year
                 df.to_csv(os.path.join(output_src,year+'_corpus_proc.csv'),mode="a",index=False)
 
+### new
 parent_dir = os.path.join(os.path.dirname(dn),'corpora\dta\Belletristik') # make args
 for dir in os.listdir(parent_dir):
+    #if dir/file check or NO FILES ON THIS LEVEL
     child_dir = os.path.join(parent_dir,dir)
     proc_files_in_dir(child_dir, output_src, dir)
         

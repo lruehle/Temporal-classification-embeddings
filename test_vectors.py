@@ -6,6 +6,8 @@ from pathlib import Path
 import align_embeddings
 import os
 
+### No 3 in pipeline -> trigger align_embeddings for all models
+
 
 def load_model(path):
     model = Word2Vec.load(path)

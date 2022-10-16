@@ -5,16 +5,17 @@ from smart_open import open
 from gensim.models.callbacks import CallbackAny2Vec
 import pandas as pd
 
+### No.2 in pipeline: train embedding models for each corpus subclass (years)
+
+
 dn = os.path.abspath('create_embeddings.py')
-input_dir_src = os.path.join(os.path.dirname(dn),'corpora\processed')
+input_dir_src = os.path.join(os.path.dirname(dn),'corpora\processed\\test1620_corpus_proc')
 input_src = os.path.join(input_dir_src,'merged_file.csv')
 
-"""def read_input(input_file):
-    with open(input_file,encoding="utf-8") as f:
-        for line in f:
-            yield simple_preprocess(line,deacc=True,min_len=4,max_len=20) #list of str tokens
-"""
+
 #from https://rare-technologies.com/word2vec-tutorial/
+# needs to be iterable & restartable
+# simple_preprocess returns tokens
 class My_Sentences(object):
     def __init__(self, dirname):
         self.dirname = dirname
@@ -25,20 +26,8 @@ class My_Sentences(object):
             #df = pd.read_csv(os.path.join(self.dirname, fname), usecols=['txt']) #for line in df:
                 yield simple_preprocess(line,deacc=True,min_len=2,max_len=20)
 
-"""class CSV_Sentences(object):
-    def __init__(self, dirname):
-        self.dirname = dirname
-    def __iter__(self):
-        df = pd.read_csv(os.path.join(input_dir_src, input_src))
-        for row in df.iterrows():
-            p=row['txt']
-            yield simple_preprocess(row['txt'],deacc=True,min_len=2,max_len=20)
-sentences = CSV_Sentences(input_dir_src)
-# iter over pd.df is not considered good
-"""
 sentences = My_Sentences(input_dir_src)
 
-  
 
 class LossLogger(CallbackAny2Vec):
     '''Output loss at each epoch'''
@@ -56,6 +45,13 @@ class LossLogger(CallbackAny2Vec):
         self.epoch += 1
 loss_logger = LossLogger()
 
+### auto train model for each timeframe
+'''
+foreach file in processed folder:
+    run sentences on corpus
+    build model for sentences
+    save model & vectors
+'''
 
 word2v_model = Word2Vec(vector_size=100,
                      window=5,
