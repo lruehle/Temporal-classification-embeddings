@@ -27,11 +27,10 @@ def proc_files_in_dir(txt_src,output_src,year):
         for file in os.listdir(txt_src):
             if file.endswith(".txt"): 
                 file_path = f"{txt_src}\{file}"
-                df = pd.read_csv(file_path, sep=".\\n", header=None,names=["txt","year"]) 
+                df = pd.read_csv(file_path, sep=".\\n", header=None,names=["txt","year"],engine="python") 
                 df= df[df['txt'].str.count(' ') > 2] #drop lines with only one or two words -> references to role/active speaker etc.
                 ###new
                 df['txt'] = df['txt'].apply(remove_stop_words)
-                df['tokenized'] = df['txt'].map(preproc)
                 ####
                 df = df.replace("/|,|[^\w\s]","",regex=True)
                 df = df.replace('\d+', '',regex=True)
@@ -42,8 +41,11 @@ def proc_files_in_dir(txt_src,output_src,year):
                 df = df.replace("Ö","Oe",regex=True)
                 df = df.replace("Ü","Ue",regex=True)
                 df = df.replace("ß","ss",regex=True)
+                df['tokenized'] = df['txt'].map(preproc)
                 df['year']= year
-                df.to_csv(os.path.join(output_src,year+'_corpus_proc.csv'),mode="a",index=False)
+                df.to_csv(os.path.join(output_src,year+'_corpus_proc.csv'),mode="a",index=False,header=False,sep=";")
+                #df.to_csv(outfile,mode="a",index=False,header=False,sep=";")
+        
 
 ### new
 parent_dir = os.path.join(os.path.dirname(dn),'corpora\dta\Belletristik') # make args
