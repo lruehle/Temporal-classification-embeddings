@@ -1,3 +1,4 @@
+from itertools import count
 import pandas as pd
 import numpy as np
 import os
@@ -6,11 +7,12 @@ from gensim.models.word2vec import Word2Vec
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score,confusion_matrix
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.preprocessing import MinMaxScaler, normalize
 from sklearn.metrics import classification_report
 from sklearn import metrics
 import matplotlib.pyplot as plt
-import pickle
-from ast import literal_eval
+#import pickle
 from sklearn.tree import DecisionTreeClassifier
 
 ### No.4 in pipeline: prepare data for classifier & train
@@ -96,18 +98,61 @@ year =sentence_vecs.columns[-1]
 all_vecs =sentence_vecs.columns[:-1]
 X=sentence_vecs[all_vecs].values
 y=sentence_vecs[year].values
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=428)
 
+# normalize for Naive Bayes (lots of negatives in the vectors)
+scaler = MinMaxScaler()
+scaled_X = scaler.fit_transform(X)
+#normalized_X = normalize(scaled_X, norm='l1', axis=1, copy=True)
+
+#X_train, X_test, y_train, y_test = train_test_split(scaled_X, y, test_size=0.3, random_state=42) Bayes, no difference between scaled/unscaled for Dtree 
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+unique_train, counts_train = np.unique(y_train, return_counts=True)
+unique_test, counts_test = np.unique(y_test, return_counts=True)
+print("amount training 1600|1700|1800",counts_train)
+print("amount testing 1600|1700|1800",counts_test)
 #check data
-print(X_train.shape)
-print(y_train.shape)
-print(X_test.shape)
-print(y_test.shape)
+print("training shape vectors: ",X_train.shape)
+print("training shape years: ",y_train.shape)
+print("testing shape vectors: ",X_test.shape)
+print("testing shape years: ",y_test.shape)
+#save data: 
+'''
+test_df= pd.DataFrame(X_test,y_test)
+train_df= pd.DataFrame(X_train,y_train)
+test_df.to_pickle("test_pickle.pkl")
+train_df.to_pickle("train_pickle.pkl")'''
 
 # naive Bayes:
+'''
+classifier_nb = MultinomialNB()
+classifier_nb.fit(X_train,y_train)
+prediction=classifier_nb.predict(X_test)
+print("\n\nNaive Bayes Classifier:\n")
+ '''
 
 
-vector_df = pd.DataFrame()
+#logistic Regression:
+    #For multiclass problems, only ‘newton-cg’, ‘sag’, ‘saga’ and ‘lbfgs’ handle multinomial loss;
+'''classifier_logR = LogisticRegression(C=20.0,penalty='l2', solver='sag').fit(X_train,y_train) #c:regularization (trust this data alot/less values from 0.001 - 1k)
+prediction = classifier_logR.predict(X_test)
+print("\n\nLogistic Regression Classifier:\n With values: c=20; penalty=L2, solver=sag:\n ")'''
+
+# Decisiontree:
+classifier_Dtree = DecisionTreeClassifier(max_depth=20,min_samples_leaf=1,criterion='entropy') #check criterion, min_leaf=1 best for few classes
+classifier_Dtree = classifier_Dtree.fit(X_train,y_train)
+prediction = classifier_Dtree.predict(X_test)
+print("\n\nDecision Tree Classifier:\n With values: depth=20; criterion=entropy, min_samples_leaf=2\n ")
+
+#print classifier results:
+print("classification report: \n",metrics.classification_report(y_test, prediction))
+#print("confusion matrix for 1600, 1700, 1800 (x=true; y=predicted):\n",confusion_matrix(y_test,prediction))
+print(pd.crosstab(y_test, prediction, rownames=['True values'], colnames=['Predicted'], margins=True))
+
+
+
+
+
+#vector_df = pd.DataFrame()
 def sentence_vec_to_csv():
     for file in os.listdir(parent_dir):
         #if dir/file check or ONLY FILES ON THIS LEVEL
@@ -120,117 +165,9 @@ def sentence_vec_to_csv():
         df.to_csv(child_path,mode="w",index=False,header=False,sep=";")
         print(df.head())
         print(file+" is done")
-        #does it make sense to store sentence vec in multi. columns so that each vector[i] can be compared?
+        #does it make sense to store sentence vec in multi. columns so that each vector[i] can be compared? ->yup! now pickle, 10x as fast
 #sentence_vec_to_csv()
 
 
-#files = os.path.join(parent_dir,"*_corpus_proc.csv")
-#files = glob.glob(files)
-
-#prepare train test
-'''df = pd.read_csv(os.path.join(parent_dir,"1600_corpus_proc.csv"),usecols=["sentence_vec"],header=0,sep=",")
-print(df.head())
-print(len(df))
-print(len(df.columns))'''
-
-def fix_this_shit(my_string):
-    my_string=my_string.replace('[','')
-    my_string=my_string.replace(']','')
-    #my_string = my_string.split()
-    #return my_string
-    floats_list = []
-    for item in my_string.split():
-        floats_list.append(float(item))
-    return floats_list #[float1,float2...]
-
-def train_this_model():
-    vectors1 = pd.read_csv(os.path.join(parent_dir,"1600_corpus_proc.csv"),converters={3: fix_this_shit},sep=";", header=None)[3]
-    #print(vectors1.head())
-    #vectors1 = vectors1.to_list()
-    #vectors1=[float(x) for inner_list in vectors1 for inner in inner_list for x in inner]
-    #vectors1 = vectors1.astype(float)
-    vectors2 = pd.read_csv(os.path.join(parent_dir,"1700_corpus_proc.csv"),converters={3: fix_this_shit},sep=";", header=None)[3]
-    vectors3 = pd.read_csv(os.path.join(parent_dir,"1800_corpus_proc.csv"),converters={3: fix_this_shit},sep=";", header=None)[3]
-    vs=[vectors1,vectors2,vectors3]
-    vectors = pd.concat(vs).values.tolist() #needs to be list of float, not string! -> [[float1,float2],[float1,float2]]
-    #v= np.fromstring(vectors,dtype=float)
-    #vectors = pd.concat([pd.read_csv(file,sep=";",usecols=["sentence_vec"])for file in files], ignore_index=True).to_list() #use once all have same seperator
-    year1 = pd.read_csv(os.path.join(parent_dir,"1600_corpus_proc.csv"),sep=";",header=None,usecols=[1])#["year"]
-    #year1['year'] = year1['year'].astype(int)
-    #year1 = year1.values.tolist()
-    #year1 = [int(x) for inner_list in year1 for x in inner_list]
-    #year1 = [float(x) for x in year1]
-    year2 = pd.read_csv(os.path.join(parent_dir,"1700_corpus_proc.csv"),sep=";", header=None,usecols=[1])
-    year3 = pd.read_csv(os.path.join(parent_dir,"1800_corpus_proc.csv"),sep=";", header=None,usecols=[1])
-    ys=[year1,year2,year3]
-    year = pd.concat(ys).values.tolist()
-    #year = pd.concat([pd.read_csv(file,sep=";",usecols=["year"])for file in files], ignore_index=True).to_list()
-    vectors_train, vectors_test, year_train, year_test = train_test_split(vectors, year, test_size=0.2,random_state=1)
-    dtree_model = DecisionTreeClassifier(max_depth = 2).fit(vectors_train, year_train)
-    dtree_predictions = dtree_model.predict(vectors_test)
-    cm = confusion_matrix(year_test, dtree_predictions)
-    print(cm)
-    print('accuracy %s' % accuracy_score(dtree_predictions, year_test))
-    print(classification_report(year_test, dtree_predictions,target_names=['1600','1700','1800']))
-  #  train_array = np.array([vectors_train,year_train])
-   # test_array = np.array([vectors_test, year_test])
-#    np.save(os.path.join(data_dir,"train_word_embeds.npy"),train_array)
- #   np.save(os.path.join(data_dir,"test_word_embeds.npy"),test_array)
-
-    #train_df = pd.DataFrame({'vectors_train':vectors_train, 'year_train':year_train})
-    #test_df = pd.DataFrame({'vectors_test':vectors_test, 'year_test':year_test})
-    #train_df.to_csv(os.path.join(data_dir,"train_word_embeds.csv"),mode="w",index=False,sep=";")
-   # test_df.to_csv(os.path.join(data_dir,"test_word_embeds.csv"),mode="w",index=False,sep=";")
-    #np.savetxt(os.path.join(data_dir,"train_word_embeds.txt"), train_df.values, delimiter=";",fmt='%s')
-    #np.savetxt(os.path.join(data_dir,"test_word_embeds.txt"), test_df.values, delimiter=";",fmt='%s')
-
-    #classifier
-    #classifier = LogisticRegression()
-    #classifier.fit(vectors_train,year_train)
-
-    #save model
-    #filename = 'classifier_word_embeds.sav'
-    #pickle.dump(classifier, open(filename, 'wb'))
-    #predicted = classifier.predict(vectors_test) #vector Übergabe -> für workflow muss eingabe noch in vector verarbeitet werden (sentence_vec())
-    #print("Logistic Regression Accuracy:",metrics.accuracy_score(year_test, predicted))
-    #print("Logistic Regression Precision:",metrics.precision_score(year_test, predicted))
-    #print("Logistic Regression Recall:",metrics.recall_score(year_test, predicted))
-    #result = classifier.score(vectors_test, year_test)
-    #print(result)
 
 
-#train_this_model() 
-
-# load the model from disk
-'''train_df = pd.read_csv(os.path.join(data_dir,"test_word_embeds.csv"),sep=";")
-train_df = np.loadtxt(os.path.join(data_dir,"test_word_embeds.csv"),delimiter=";",skiprows=1)
-print(train_df.flat[0])
-vec_test = train_df['vectors_test'].to_list()
-vec_test = [item[0] for item in train_df]
-year_test = train_df['year_test'].to_list()
-year_test = [item[1] for item in train_df]'''
-'''all_test = np.load(os.path.join(data_dir,"test_word_embeds.npy"))
-vec_test = [item[0] for item in all_test]
-year_test = [item[1] for item in all_test]
-loaded_model = pickle.load(open("classifier_word_embeds.sav", 'rb'))
-predicted = loaded_model.predict(vec_test) #vector Übergabe -> für workflow muss eingabe noch in vector verarbeitet werden (sentence_vec())
-print("Logistic Regression Accuracy:",metrics.accuracy_score(year_test, predicted))
-print("Logistic Regression Precision:",metrics.precision_score(year_test, predicted))
-print("Logistic Regression Recall:",metrics.recall_score(year_test, predicted))'''
-#result = loaded_model.score(X_test, Y_test)
-#print(result)
-
-
-
-
-'''files = os.path.join(parent_dir,"*_corpus_proc.csv")
-files = glob.glob(files)
-def set_master_corpus():      
-    df = pd.concat([pd.read_csv(file,sep=";")for file in files], ignore_index=True)  
-    df.to_csv("master.csv",mode="w",index=False,sep=";")
-set_master_corpus()'''
-
-
-'''vecs = 
-for i, v in enumerate(df['Text_vect_avg']):
-    print(len(df['Text_Tokenized'].iloc[i]), len(v))'''
