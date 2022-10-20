@@ -10,7 +10,7 @@ from gensim.utils import simple_preprocess
 
 
 dn = os.path.abspath('convert_corpus.py')
-txt_src = os.path.join(os.path.dirname(dn),'corpora\dta\Belletristik\\1600')
+#txt_src = os.path.join(os.path.dirname(dn),'corpora\dta\Belletristik\\1600')
 output_src = os.path.join(os.path.dirname(dn),'corpora\processed') #albertinus_landtstoertzer01_1615.txt')
 stop_words = stopwords.words('german')
 
@@ -21,26 +21,29 @@ def remove_stop_words(txt):
 def preproc(txt):
     return simple_preprocess(txt,deacc=True,min_len=3, max_len=20)
 
+def remove_umlauts(df):
+    df = df.replace("/|,|[^\w\s]","",regex=True)
+    df = df.replace('\d+', '',regex=True)
+    df = df.replace("ä","ae",regex=True)
+    df = df.replace("ö","oe",regex=True)
+    df = df.replace("ü","ue",regex=True)
+    df = df.replace("Ä","Ae",regex=True)
+    df = df.replace("Ö","Oe",regex=True)
+    df = df.replace("Ü","Ue",regex=True)
+    df = df.replace("ß","ss",regex=True)
+    return df
+
 ##alternative: write data from files to year_file & then process all at once
+## dir_name == year
 def proc_files_in_dir(txt_src,output_src,year):
-    with open(os.path.join(output_src,year+'_corpus_proc.csv'), 'w+') as outfile: #w+ should delete file content
+    with open(os.path.join(output_src,year+'_corpus_proc.csv'), 'w+') as outfile: #why open here and still use to_csv below? Fix in Update #w+ should delete file content
         for file in os.listdir(txt_src):
             if file.endswith(".txt"): 
                 file_path = f"{txt_src}\{file}"
                 df = pd.read_csv(file_path, sep=".\\n", header=None,names=["txt","year"],engine="python") 
                 df= df[df['txt'].str.count(' ') > 2] #drop lines with only one or two words -> references to role/active speaker etc.
-                ###new
                 df['txt'] = df['txt'].apply(remove_stop_words)
-                ####
-                df = df.replace("/|,|[^\w\s]","",regex=True)
-                df = df.replace('\d+', '',regex=True)
-                df = df.replace("ä","ae",regex=True)
-                df = df.replace("ö","oe",regex=True)
-                df = df.replace("ü","ue",regex=True)
-                df = df.replace("Ä","Ae",regex=True)
-                df = df.replace("Ö","Oe",regex=True)
-                df = df.replace("Ü","Ue",regex=True)
-                df = df.replace("ß","ss",regex=True)
+                df = remove_umlauts(df)
                 df['tokenized'] = df['txt'].map(preproc)
                 df['year']= year
                 df.to_csv(os.path.join(output_src,year+'_corpus_proc.csv'),mode="a",index=False,header=False,sep=";")

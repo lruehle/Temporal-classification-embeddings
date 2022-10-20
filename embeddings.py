@@ -71,7 +71,7 @@ word2v_model = Word2Vec(vector_size=100,
                     sg=0) #test difference in skip gram & Cbow (Cbow: faster & good for big datasets, skip gram better for rare words)
 
 print(word2v_model) 
-word2v_model.build_vocab(sentences)  #better save data as tokens before?             
+word2v_model.build_vocab(sentences)            
 print("vocab is done!: ",word2v_model)
 word2v_model.train(sentences,
                     total_examples=word2v_model.corpus_count, 

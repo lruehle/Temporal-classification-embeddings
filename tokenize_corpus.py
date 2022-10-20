@@ -6,10 +6,11 @@ import csv
 
 
 ### base version of convert_corpus
-### if processing after model is still necessary
+### if processing after model is still necessary or user Input is handled
+
 
 dn = os.path.abspath('tokenize_corpus.py')
-parent_dir = os.path.join(os.path.dirname(dn),'corpora\processed')
+parent_dir = os.path.join(os.path.dirname(dn),'corpora\dta\Belletristik')
 
 stop_words = stopwords.words('german')
 
@@ -31,7 +32,7 @@ for file in os.listdir(parent_dir):
     #df.drop('sentence_vec', axis=1, inplace=True)
     df['tokenized'] = df['txt'].map(preproc) 
     print(df.head())
-    df.to_csv(child_path, mode="w",index=False,sep = ';')#,quoting = csv.QUOTE_NONE, escapechar = ' ')
+    df.to_csv(child_path, mode="w",index=False,sep = ';')
     print(file+" is done")
     
     
