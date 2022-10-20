@@ -26,8 +26,14 @@ base_path = os.path.join(os.path.dirname(dn),'models_century\\1600_word2vec.mode
 model_path = os.path.join(os.path.dirname(dn),'models_century')
 
 
-#automatic try version
-for n, file in enumerate(os.listdir(model_path)): #still errors
+
+def align_models(model_base, model_to_align,save_path):
+    aligned_model= align_embeddings.smart_procrustes_align_gensim(model_base, model_to_align)
+    aligned_model.save(save_path)
+
+
+#automatic try version - testing not completed
+'''for n, file in enumerate(os.listdir(model_path)): #still errors
     #filter out dirs
     if file.endswith(".model"):
         #path= os.path.relpath(os.path.join(dir_embed,file))
@@ -40,19 +46,19 @@ for n, file in enumerate(os.listdir(model_path)): #still errors
             aligned_model= align_embeddings.smart_procrustes_align_gensim(model_base, model_to_align)
             aligned_model.save(save_path)
             base_path = save_path
-            print(file+" is done")
+            print(file+" is done")'''
 
 
 
 #manual version: 
-model1 = load_model("models\\1600_word2vec.model")
+#model1 = load_model("models\\1600_word2vec.model")
 #model2 = load_model("models\\1700_word2vec.model")
-model2 = load_model("aligned\\1700_word2vec.model")
-model3 = load_model("aligned\\1800_word2vec.model")
+#model2 = load_model("aligned\\1700_word2vec.model")
+#model3 = load_model("aligned\\1800_word2vec.model")
 #model3 = load_model("models\\1800_word2vec.model")
-
 
 
 #aligning models:
 #aligned_model= align_embeddings.smart_procrustes_align_gensim(model2, model3)
-#aligned_model.save("aligned\\1800_word2vec.model") 
+#aligned_model.save("aligned\\1800_word2vec.model")
+ 

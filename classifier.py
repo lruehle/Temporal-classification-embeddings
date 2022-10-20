@@ -21,6 +21,8 @@ from sklearn.tree import DecisionTreeClassifier
 model_1600 = Word2Vec.load("models_century\\1600_word2vec.model")
 model_1700 = Word2Vec.load("aligned\century\\1700_word2vec.model")
 model_1800 = Word2Vec.load("aligned\century\\1800_word2vec.model")
+#model_grimm = Word2Vec.load("aligned\grimm\\1800_word2vec.model")
+model_grimm = Word2Vec.load("aligned\grimm\\1800erw_word2vec.model")
 dn = os.path.abspath('classifier.py')
 parent_dir = os.path.join(os.path.dirname(dn),'corpora\processed\century')
 data_dir = os.path.join(os.path.dirname(dn),'data')
@@ -29,7 +31,7 @@ data_dir = os.path.join(os.path.dirname(dn),'data')
 def load_pickle(pickle_path):
     return pd.read_pickle(pickle_path)
 
-def get_all_df():
+def get_all_df(parent_dir):
     all_files = glob.glob(os.path.join(parent_dir, "*_corpus_proc.csv"))
     df = pd.concat((pd.read_csv(f,sep=";",header=None,names=["txt","year","tokenized"]) for f in all_files), ignore_index=True)
     return df
@@ -52,11 +54,15 @@ def sentence_vec(sentence,year):
     sentence = sentence.replace("'","")
     sentence = sentence.replace(" ","")
     sentence = sentence.split(",")
-    model = model_1600 if year == 1600 else model_1700 if year == 1700 else model_1800
+    #model = model_1600 if year == 1600 else model_1700 if year == 1700 else model_1800
+    model = model_grimm
+    counter =0
     for word in sentence:
         if word in model.wv: #vocabulary of all models are the same after alignement
            # word_count +=1 # no ++ in Python?
             vec_sentence += model.wv[word] #write/add word vector to sentence vector values (vector size stays the same)
+        else :
+            counter +=1
     word_count=len(sentence)
     vec_sentence = vec_sentence/word_count # average value
     return vec_sentence
@@ -86,7 +92,7 @@ def sentences_to_vec(sentences,years):
     return sentence_vecs
 
 def create_data_pickle(data_size=10000):
-    all_df = get_all_df()
+    all_df = get_all_df(parent_dir)
     all_df = all_df.groupby("year").sample(n=data_size, random_state=1)
     all_df = all_df.sample(frac=1).reset_index(drop=True) #shuffle values
     print(all_df.head())
@@ -120,7 +126,7 @@ def create_train_test():
     scaled_X = scaler.fit_transform(X)
     #normalized_X = normalize(scaled_X, norm='l1', axis=1, copy=True)
 
-    #X_train, X_test, y_train, y_test = train_test_split(scaled_X, y, test_size=0.3, random_state=42) Bayes, no difference between scaled/unscaled for Dtree 
+    #X_train, X_test, y_train, y_test = train_test_split(scaled_X, y, test_size=0.3, random_state=42) #Bayes, no difference between scaled/unscaled for Dtree 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
     unique_train, counts_train = np.unique(y_train, return_counts=True)
     unique_test, counts_test = np.unique(y_test, return_counts=True)
@@ -143,42 +149,51 @@ def create_train_test():
 #create_train_test()
 
 #load and print train/test
-X_train = load("data\century\X_train_200.joblib")
-X_test=load("data\century\X_test_200.joblib")
-y_train=load("data\century\y_train_200.joblib")
-y_test=load("data\century\y_test_200.joblib") 
-unique_train, counts_train = np.unique(y_train, return_counts=True)
-unique_test, counts_test = np.unique(y_test, return_counts=True)
-print("amount training 1600|1700|1800",counts_train)
-print("amount testing 1600|1700|1800",counts_test)
+def create_classifier():
+    X_train = load("data\century\X_train_200.joblib")
+    X_test=load("data\century\X_test_200.joblib")
+    y_train=load("data\century\y_train_200.joblib")
+    y_test=load("data\century\y_test_200.joblib") 
+    unique_train, counts_train = np.unique(y_train, return_counts=True)
+    unique_test, counts_test = np.unique(y_test, return_counts=True)
+    print("amount training 1600|1700|1800",counts_train)
+    print("amount testing 1600|1700|1800",counts_test)
 
-# naive Bayes:
-'''
-classifier_nb = MultinomialNB()
-classifier_nb.fit(X_train,y_train)
-prediction=classifier_nb.predict(X_test)
-print("\n\nNaive Bayes Classifier:\n")
- '''
+    # naive Bayes:
+    '''classifier_nb = MultinomialNB()
+    classifier_nb.fit(X_train,y_train)
+    prediction=classifier_nb.predict(X_test)
+    dump(classifier_nb, 'classifier\centuries\\nb_centuries_200.joblib')
+    print("\n\nNaive Bayes Classifier:\n")'''
+ 
 
-#logistic Regression:
-    #For multiclass problems, only ‘newton-cg’, ‘sag’, ‘saga’ and ‘lbfgs’ handle multinomial loss;
-'''classifier_logR = LogisticRegression(C=20.0,penalty='l2', solver='sag').fit(X_train,y_train) #c:regularization (trust this data alot/less values from 0.001 - 1k)
-prediction = classifier_logR.predict(X_test)
-print("\n\nLogistic Regression Classifier:\n With values: c=20; penalty=L2, solver=sag:\n ")'''
+    #logistic Regression:
+    #For multiclass problems, only ‘newton-cg’, ‘sag’, ‘saga’ and ‘lbfgs’ handle multinomial loss; #multi_class = auto -> multinomial
+    classifier_logR = LogisticRegression(C=20.0,penalty='l2', solver='sag').fit(X_train,y_train) #c:regularization (trust this data alot/less values from 0.001 - 1k)
+    prediction = classifier_logR.predict(X_test)
+    dump(classifier_logR, 'classifier\centuries\logR_centuries_200.joblib')
+    print("\n\nLogistic Regression Classifier:\n With values: c=20; penalty=L2, solver=saga:\n ")
 
-# Decisiontree:
-classifier_Dtree = DecisionTreeClassifier(max_depth=20,min_samples_leaf=1,criterion='gini') #check criterion, min_leaf=1 best for few classes
-classifier_Dtree = classifier_Dtree.fit(X_train,y_train)
-prediction = classifier_Dtree.predict(X_test)
-dump(classifier_Dtree, 'classifier\centuries\Dtree_centuries_200.joblib')
-print("\n\nDecision Tree Classifier:\n With values: depth=20; criterion=gini, min_samples_leaf=1\n ")
+    # Decisiontree:
+    '''classifier_Dtree = DecisionTreeClassifier(max_depth=20,min_samples_leaf=1,criterion='gini') #check criterion, min_leaf=1 best for few classes
+    classifier_Dtree = classifier_Dtree.fit(X_train,y_train)
+    prediction = classifier_Dtree.predict(X_test)
+    dump(classifier_Dtree, 'classifier\centuries\Dtree_centuries_200_norm.joblib')
+    print("\n\nDecision Tree Classifier:\n With values: depth=20; criterion=gini, min_samples_leaf=1\n ")'''
 
-#print classifier results:
-print("classification report: \n",metrics.classification_report(y_test, prediction))
-#print("confusion matrix for 1600, 1700, 1800 (x=true; y=predicted):\n",confusion_matrix(y_test,prediction))
-print(pd.crosstab(y_test, prediction, rownames=['True values'], colnames=['Predicted'], margins=True))
+    #print classifier results:
+    print("classification report: \n",metrics.classification_report(y_test, prediction))
+    #print("confusion matrix for 1600, 1700, 1800 (x=true; y=predicted):\n",confusion_matrix(y_test,prediction))
+    print(pd.crosstab(y_test, prediction, rownames=['True values'], colnames=['Predicted'], margins=True))
 
+#create_classifier()
 
+def classify_this(data_vecs,classifier,truthy=None):
+    prediction=classifier.predict(data_vecs)
+    print(prediction)
+    if truthy is not None:
+        print("classification report: \n",metrics.classification_report(truthy, prediction))
+        print(pd.crosstab(truthy, prediction, rownames=['True values'], colnames=['Predicted'], margins=True))
 
 
 

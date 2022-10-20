@@ -10,8 +10,8 @@ import pandas as pd
 
 
 dn = os.path.abspath('create_embeddings.py')
-input_dir_src = os.path.join(os.path.dirname(dn),'corpora\processed\\1600_corpus_proc.csv')
-#input_src = os.path.join(input_dir_src,'merged_file.csv')
+input_file_src = os.path.join(os.path.dirname(dn),'corpora\processed\\1600_corpus_proc.csv')
+#input_src = os.path.join(input_file_src,'merged_file.csv')
 
 
 #from https://rare-technologies.com/word2vec-tutorial/
@@ -30,17 +30,6 @@ class My_Sentences(object):
                 yield simple_preprocess(line,deacc=True,min_len=2,max_len=20)
 '''
 
-df = pd.read_csv(input_dir_src, sep=";",header=None,names=["txt","year","tokenized"])
-#print(df.head())
-tokenized = df.txt
-#tokenized = tokenized.astype(str)
-tokenized = tokenized.fillna('').astype(str).apply(simple_preprocess,deacc=True,min_len=3,max_len=20)
-#print(tokenized)
-#print(tokenized.loc[0]) 
-sentences = tokenized
-#sentences = My_Sentences(input_dir_src)
-
-
 class LossLogger(CallbackAny2Vec):
     '''Output loss at each epoch'''
     def __init__(self):
@@ -57,6 +46,33 @@ class LossLogger(CallbackAny2Vec):
         self.epoch += 1
 loss_logger = LossLogger()
 
+def create_embedding(input_file_src):
+    df = pd.read_csv(input_file_src, sep=";",header=None,names=["txt","year","tokenized"])
+    print("\ncreating embeddings for: ",df.head())
+    tokenized = df.txt
+    tokenized = tokenized.fillna('').astype(str).apply(simple_preprocess,deacc=True,min_len=3,max_len=20)#easier than applying stuff to tokenized field (string issue)
+    #tokenized = df.tokenized
+    sentences = tokenized
+    #sentences = My_Sentences(input_file_src)
+    word2v_model = Word2Vec(vector_size=100,
+                    window=5,
+                    min_count=3,
+                    sg=0) #test difference in skip gram & Cbow (Cbow: faster & good for big datasets, skip gram better for rare words)
+
+    print(word2v_model) 
+    word2v_model.build_vocab(sentences)            
+    print("vocab is done!: ",word2v_model)
+    word2v_model.train(sentences,
+                        total_examples=word2v_model.corpus_count, 
+                        callbacks=[loss_logger],
+                        compute_loss=True,
+                        epochs=12)
+    word2v_model.save("models_grimm\\1800erw_word2vec.model")#saving model
+    word_vectors=word2v_model.wv
+    word_vectors.save("models_grimm\\1800erw_word2vec.wordvectors")
+    
+
+
 ### auto train model for each timeframe
 '''
 foreach file in processed folder:
@@ -65,19 +81,4 @@ foreach file in processed folder:
     save model & vectors
 '''
 
-word2v_model = Word2Vec(vector_size=100,
-                    window=5,
-                    min_count=3,
-                    sg=0) #test difference in skip gram & Cbow (Cbow: faster & good for big datasets, skip gram better for rare words)
-
-print(word2v_model) 
-word2v_model.build_vocab(sentences)            
-print("vocab is done!: ",word2v_model)
-word2v_model.train(sentences,
-                    total_examples=word2v_model.corpus_count, 
-                    callbacks=[loss_logger],
-                    compute_loss=True,
-                    epochs=12)
-word2v_model.save("models\\1600_word2vec.model")#saving model
-word_vectors=word2v_model.wv
-word_vectors.save("models\\vectors\\1600_word2vec.wordvectors") 
+ 
