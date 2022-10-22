@@ -4,6 +4,7 @@ import numpy as np
 import os
 import glob
 from gensim.models.word2vec import Word2Vec
+from gensim.models import KeyedVectors
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score,confusion_matrix
@@ -21,8 +22,11 @@ from sklearn.tree import DecisionTreeClassifier
 model_1600 = Word2Vec.load("models_century\\1600_word2vec.model")
 model_1700 = Word2Vec.load("aligned\century\\1700_word2vec.model")
 model_1800 = Word2Vec.load("aligned\century\\1800_word2vec.model")
+model_1600_erw = KeyedVectors.load("aligned\erw\\1600erw_word2vec.model", mmap='r')
+model_1700_erw = KeyedVectors.load("aligned\erw\\1700erw_word2vec.model", mmap='r')
+model_1800_erw = KeyedVectors.load("aligned\erw\\1800erw_word2vec.model", mmap='r')
 #model_grimm = Word2Vec.load("aligned\grimm\\1800_word2vec.model")
-model_grimm = Word2Vec.load("aligned\grimm\\1800erw_word2vec.model")
+#model_grimm = Word2Vec.load("aligned\grimm\\1800erw_word2vec.model")
 dn = os.path.abspath('classifier.py')
 parent_dir = os.path.join(os.path.dirname(dn),'corpora\processed\century')
 data_dir = os.path.join(os.path.dirname(dn),'data')
@@ -55,7 +59,8 @@ def sentence_vec(sentence,year):
     sentence = sentence.replace(" ","")
     sentence = sentence.split(",")
     #model = model_1600 if year == 1600 else model_1700 if year == 1700 else model_1800
-    model = model_grimm
+    model = model_1600_erw if year == 1600 else model_1700_erw if year == 1700 else model_1800_erw
+    #model = model_grimm
     counter =0
     for word in sentence:
         if word in model.wv: #vocabulary of all models are the same after alignement
@@ -104,15 +109,23 @@ def create_data_pickle(data_size=10000):
     print(sentence_vecs.shape)
     sentence_vecs['year'] = all_df['year']
     print("\n vec head: ",sentence_vecs.head())
-    sentence_vecs.to_pickle('data\century\master_vecs_200k.pkl')
+    sentence_vecs.to_pickle('data\centuries\master_vecs_200k.pkl')
 
 
 #create train/test data:
 #load & check
 #! Change for Bayes!
 def create_train_test():
-    sentence_vecs = load_pickle('data\century\master_vecs_200k.pkl') 
+    sentence_vecs = load_pickle('data\centuries\master_vecs_200k.pkl') 
+    '''sentence_vecs_grimm = load_pickle('data\grimm\master_vecs_grimm_all.pkl')
+    sentence_vecs_grimm['year'] = 1800.0
+    frames= [sentence_vecs1, sentence_vecs_grimm]
+    sentence_vecs = pd.concat(frames)'''
+    #print("1 head: \n",sentence_vecs1.head(), sentence_vecs1.dtypes)
+    #print("grimm head \n",sentence_vecs_grimm.head(),sentence_vecs_grimm.dtypes)
     print("creating train_test for: \n",sentence_vecs.head())
+    #print("size 1: \n",sentence_vecs1.shape)
+    print("size total: \n",sentence_vecs.shape)
     year_distribution(sentence_vecs)
 
     #training split:
@@ -137,12 +150,17 @@ def create_train_test():
     print("training shape years: ",y_train.shape)
     print("testing shape vectors: ",X_test.shape)
     print("testing shape years: ",y_test.shape)
-    #save data
-    dump(X_train,"data\century\X_train_200.joblib")
-    dump(X_test,"data\century\X_test_200.joblib")
-    dump(y_train,"data\century\y_train_200.joblib")
-    dump(y_test,"data\century\y_test_200.joblib")
+    #save data 
+    # comb
+    '''dump(X_train,"data\combined\X_train_200_comb.joblib")
+    dump(X_test,"data\combined\X_test_200_comb.joblib")
+    dump(y_train,"data\combined\y_train_200_comb.joblib")
+    dump(y_test,"data\combined\y_test_200_comb.joblib")'''
 
+    dump(X_train,"data\centuries\X_train_200.joblib")
+    dump(X_test,"data\centuries\X_test_200.joblib")
+    dump(y_train,"data\centuries\y_train_200.joblib")
+    dump(y_test,"data\centuries\y_test_200.joblib")
 
 #create_data_pickle(200000)
 #create_data_pickle()
@@ -150,10 +168,16 @@ def create_train_test():
 
 #load and print train/test
 def create_classifier():
-    X_train = load("data\century\X_train_200.joblib")
-    X_test=load("data\century\X_test_200.joblib")
-    y_train=load("data\century\y_train_200.joblib")
-    y_test=load("data\century\y_test_200.joblib") 
+    #grimm + dta corpus:
+    '''X_train = load("data\combined\X_train_200_comb.joblib")
+    X_test=load("data\combined\X_test_200_comb.joblib")
+    y_train=load("data\combined\y_train_200_comb.joblib")
+    y_test=load("data\combined\y_test_200_comb.joblib") '''
+    X_train = load("data\centuries\X_train_200.joblib")
+    X_test=load("data\centuries\X_test_200.joblib")
+    y_train=load("data\centuries\y_train_200.joblib")
+    y_test=load("data\centuries\y_test_200.joblib")
+
     unique_train, counts_train = np.unique(y_train, return_counts=True)
     unique_test, counts_test = np.unique(y_test, return_counts=True)
     print("amount training 1600|1700|1800",counts_train)
@@ -169,17 +193,17 @@ def create_classifier():
 
     #logistic Regression:
     #For multiclass problems, only ‘newton-cg’, ‘sag’, ‘saga’ and ‘lbfgs’ handle multinomial loss; #multi_class = auto -> multinomial
-    classifier_logR = LogisticRegression(C=20.0,penalty='l2', solver='sag').fit(X_train,y_train) #c:regularization (trust this data alot/less values from 0.001 - 1k)
+    '''classifier_logR = LogisticRegression(C=20.0,penalty='l2', solver='sag').fit(X_train,y_train) #c:regularization (trust this data alot/less values from 0.001 - 1k)
     prediction = classifier_logR.predict(X_test)
-    dump(classifier_logR, 'classifier\centuries\logR_centuries_200.joblib')
-    print("\n\nLogistic Regression Classifier:\n With values: c=20; penalty=L2, solver=saga:\n ")
+    dump(classifier_logR, 'classifier\combined\logR_centuries_200_comb.joblib')
+    print("\n\nLogistic Regression Classifier:\n With values: c=20; penalty=L2, solver=saga:\n ")'''
 
     # Decisiontree:
-    '''classifier_Dtree = DecisionTreeClassifier(max_depth=20,min_samples_leaf=1,criterion='gini') #check criterion, min_leaf=1 best for few classes
+    classifier_Dtree = DecisionTreeClassifier(max_depth=20,min_samples_leaf=1,criterion='gini') #check criterion, min_leaf=1 best for few classes
     classifier_Dtree = classifier_Dtree.fit(X_train,y_train)
     prediction = classifier_Dtree.predict(X_test)
-    dump(classifier_Dtree, 'classifier\centuries\Dtree_centuries_200_norm.joblib')
-    print("\n\nDecision Tree Classifier:\n With values: depth=20; criterion=gini, min_samples_leaf=1\n ")'''
+    dump(classifier_Dtree, 'classifier\centuries\Dtree_centuries_200.joblib')
+    print("\n\nDecision Tree Classifier:\n With values: depth=20; criterion=gini, min_samples_leaf=1\n ")
 
     #print classifier results:
     print("classification report: \n",metrics.classification_report(y_test, prediction))

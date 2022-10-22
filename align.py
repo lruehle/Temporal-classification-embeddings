@@ -53,12 +53,12 @@ def align_models(model_base, model_to_align,save_path):
 #manual version: 
 #model1 = load_model("models\\1600_word2vec.model")
 #model2 = load_model("models\\1700_word2vec.model")
-#model2 = load_model("aligned\\1700_word2vec.model")
+#model2 = load_model("aligned\century\\1700_word2vec.model")
 #model3 = load_model("aligned\\1800_word2vec.model")
-#model3 = load_model("models\\1800_word2vec.model")
+#model3 = load_model("models_century\\1800_word2vec.model")
 
 
 #aligning models:
 #aligned_model= align_embeddings.smart_procrustes_align_gensim(model2, model3)
-#aligned_model.save("aligned\\1800_word2vec.model")
+#aligned_model.save("aligned\century\\1800_word2vec.model")
  

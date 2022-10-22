@@ -67,9 +67,9 @@ def create_embedding(input_file_src):
                         callbacks=[loss_logger],
                         compute_loss=True,
                         epochs=12)
-    word2v_model.save("models_grimm\\1800erw_word2vec.model")#saving model
+    word2v_model.save("models_erw\\1700erw_word2vec.model")#saving model
     word_vectors=word2v_model.wv
-    word_vectors.save("models_grimm\\1800erw_word2vec.wordvectors")
+    word_vectors.save("models_erw\\1700erw_word2vec.wordvectors")
     
 
 
