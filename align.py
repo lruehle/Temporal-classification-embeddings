@@ -53,12 +53,21 @@ def align_models(model_base, model_to_align,save_path):
 #manual version: 
 #model1 = load_model("models\\1600_word2vec.model")
 #model2 = load_model("models\\1700_word2vec.model")
-#model2 = load_model("aligned\century\\1700_word2vec.model")
+# model2 = load_model("aligned\century\\1700_word2vec.model")
 #model3 = load_model("aligned\\1800_word2vec.model")
-#model3 = load_model("models_century\\1800_word2vec.model")
-
+# model3 = load_model("models_century\\1800_word2vec.model")
+'''model1 = load_model("models_century\\1600_word2vec.model")
+#model2 = load_model("models\\1700_word2vec.model")
+model2 = load_model("aligned\century\\1700_word2vec.model")
+model3 = load_model("aligned\century\\1800_word2vec.model")
+model_grimm = load_model("aligned\grimm\\1800_grimm_word2vec_aligned.model")
+model_erw_1 = load_model("models_erw\\1600erw_word2vec.model")
+model_erw_2 = load_model("models_erw\\1700erw_word2vec.model")
+model_erw_3 = load_model("models_erw\\1800erw_word2vec.model")'''
 
 #aligning models:
-#aligned_model= align_embeddings.smart_procrustes_align_gensim(model2, model3)
-#aligned_model.save("aligned\century\\1800_word2vec.model")
+# print("aligning 1800erw to 1800\nvocab:\n")
+# aligned_model= align_embeddings.smart_procrustes_align_gensim(model3, model_erw_3)
+# aligned_model.save("aligned\erw\\1800erw_old.model")
+
  
