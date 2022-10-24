@@ -14,19 +14,22 @@ csv_data = os.path.join(output_src,'1800_corpus_proc_grimm.csv')
 model_path = os.path.join(os.path.dirname(dn),"aligned\grimm\\1800_grimm_word2vec_aligned.model")
 
 #models
-model_grimm = align.load_model("models_grimm\\1800_grimm_word2vec.model")
+# model_grimm = align.load_model("models_grimm\\1800_grimm_word2vec.model")
 #model_grimm_aligned = align.load_model("aligned\grimm\\1800erw_word2vec.model")
-model3 = align.load_model("aligned\century\\1800_word2vec.model")
+# model3 = align.load_model("aligned\century\\1800_word2vec.model")
 
 #classifiers:
 classifier_nb = load('classifier\centuries\\nb_centuries_200.joblib')
-classifier_b_nb = load('classifier\centuries\\nb_centuries_b.joblib')
+classifier_nb_skip = load('classifier\skip\\nb_skip.joblib')
+# classifier_b_nb = load('classifier\centuries\\nb_centuries_b.joblib')
 classifier_logR = load('classifier\centuries\\logR_centuries_200.joblib')
-classifier_b_logR = load('classifier\centuries\\logR_centuries_b.joblib')
-classifier_combined_logR =load('classifier\combined\\logR_centuries_200_comb.joblib')
+classifier_logR_skip = load('classifier\skip\\logR_skip.joblib')
+# classifier_b_logR = load('classifier\centuries\\logR_centuries_b.joblib')
+# classifier_combined_logR =load('classifier\combined\\logR_centuries_200_comb.joblib')
 
 classifier_dTree = load('classifier\centuries\\Dtree_centuries_200.joblib')
-classifier_b_dTree = load('classifier\centuries\\Dtree_centuries_b.joblib')
+classifier_dTree_skip = load('classifier\skip\\dTree_skip.joblib')
+# classifier_b_dTree = load('classifier\centuries\\Dtree_centuries_b.joblib')
 
 
 
@@ -83,7 +86,7 @@ def tokens_to_vec():
 
 def get_classified():
     # sentence_vecs = classifier.load_pickle('data\erw\master_vecs_erw.pkl') 
-    sentence_vecs = classifier.load_pickle('data\erw\master_vecs_erw_unscaled.pkl')
+    sentence_vecs = classifier.load_pickle('data\erw\master_vecs_erw_old.pkl')
     #sentence_vecs['year'] = 1800.0
     #df = classifier.get_all_df(output_src)
     #classifier.year_distribution(sentence_vecs)
@@ -93,10 +96,10 @@ def get_classified():
     scaled_X = scaler.fit_transform(X)
     #normalized_X = normalize(scaled_X, norm='l1', axis=1, copy=True)
     #print("your vectors are: \n",sentence_vecs.head())
-    classifier.classify_this(scaled_X,classifier_nb, sentence_vecs['year'])#for nb restructure vectors for negative values
-    print("Naive Bayes (200k) on erw-data: \n")
+    classifier.classify_this(X,classifier_dTree_skip, sentence_vecs['year'])#for nb restructure vectors for negative values
+    # print("skip Naive Bayes (200k) on erw-data: \n")
     # print("LogR (200k,c1,l2,sag) on erw-data: \n")
-    # print("Decision Tree (200k,l5,d20,logloss) on erw-data: \n")
+    print("Decision Tree (200k,l5,d20,logloss) on erw-data: \n")
     #classifier.classify_this(sentence_vecs,classifier_nb)#for nb restructure vectors for negative values
 
 get_classified()

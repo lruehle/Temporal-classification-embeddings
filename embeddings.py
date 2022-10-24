@@ -17,8 +17,8 @@ input_file_src = os.path.join(os.path.dirname(dn),'corpora\processed\\1600_corpu
 #from https://rare-technologies.com/word2vec-tutorial/
 # needs to be iterable & restartable
 # simple_preprocess returns tokens
-'''
-old version, includes time and tokens as well, but reads line by line ->better for memory
+
+#old version, includes time and tokens as well, but reads line by line ->better for memory
 class My_Sentences(object):
     def __init__(self, dirname):
         self.dirname = dirname
@@ -27,8 +27,8 @@ class My_Sentences(object):
         for fname in os.listdir(self.dirname):
             for line in open(os.path.join(self.dirname, fname),encoding="utf-8"):
             #df = pd.read_csv(os.path.join(self.dirname, fname), usecols=['txt']) #for line in df:
-                yield simple_preprocess(line,deacc=True,min_len=2,max_len=20)
-'''
+                yield simple_preprocess(line,deacc=True,min_len=3,max_len=20)
+
 
 class LossLogger(CallbackAny2Vec):
     '''Output loss at each epoch'''
@@ -46,18 +46,21 @@ class LossLogger(CallbackAny2Vec):
         self.epoch += 1
 loss_logger = LossLogger()
 
+
 def create_embedding(input_file_src):
-    df = pd.read_csv(input_file_src, sep=";",header=None,names=["txt","year","tokenized"])
-    print("\ncreating embeddings for: ",df.head())
-    tokenized = df.txt
-    tokenized = tokenized.fillna('').astype(str).apply(simple_preprocess,deacc=True,min_len=3,max_len=20)#easier than applying stuff to tokenized field (string issue)
+    
+    sentences = My_Sentences(os.path.join(os.path.dirname(dn),'corpora\processed'))
+    #df = pd.read_csv(input_file_src, sep=";",header=None,names=["txt","year","tokenized"])
+    #print("\ncreating embeddings for: ",df.head())
+    #tokenized = df.txt
+    #tokenized = tokenized.fillna('').astype(str).apply(simple_preprocess,deacc=True,min_len=3,max_len=20)#easier than applying stuff to tokenized field (string issue)
     #tokenized = df.tokenized
-    sentences = tokenized
+    #sentences = tokenized
     #sentences = My_Sentences(input_file_src)
     word2v_model = Word2Vec(vector_size=100,
                     window=5,
                     min_count=3,
-                    sg=0) #test difference in skip gram & Cbow (Cbow: faster & good for big datasets, skip gram better for rare words)
+                    sg=1    ) #test difference in skip gram & Cbow (Cbow: faster & good for big datasets, skip gram better for rare words)
 
     print(word2v_model) 
     word2v_model.build_vocab(sentences)            
@@ -67,11 +70,11 @@ def create_embedding(input_file_src):
                         callbacks=[loss_logger],
                         compute_loss=True,
                         epochs=12)
-    word2v_model.save("models_erw\\1700erw_word2vec.model")#saving model
+    word2v_model.save("models_skipgram\\1800_skipgramm.model")#saving model
     word_vectors=word2v_model.wv
-    word_vectors.save("models_erw\\1700erw_word2vec.wordvectors")
+    word_vectors.save("models_skipgram\\1800_skipgramm.wordvectors")
     
-
+#create_embedding("1700")
 
 ### auto train model for each timeframe
 '''
