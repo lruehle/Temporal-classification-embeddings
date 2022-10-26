@@ -22,13 +22,13 @@ from sklearn.tree import DecisionTreeClassifier
 model_1600 = Word2Vec.load("models_century\\1600_word2vec.model")
 model_1700 = Word2Vec.load("aligned\century\\1700_word2vec.model")
 model_1800 = Word2Vec.load("aligned\century\\1800_word2vec.model")
-model_1600_erw = Word2Vec.load("aligned\erw\\1600erw_old.model")
+'''model_1600_erw = Word2Vec.load("aligned\erw\\1600erw_old.model")
 model_1700_erw = Word2Vec.load("aligned\erw\\1700erw_old.model")
-model_1800_erw = Word2Vec.load("aligned\erw\\1800erw_old.model")
+model_1800_erw = Word2Vec.load("aligned\erw\\1800erw_old.model")'''
 # model_1600_erw = KeyedVectors.load("aligned\erw\\1600erw_word2vec.model", mmap='r')
 # model_1700_erw = KeyedVectors.load("aligned\erw\\1700erw_word2vec.model", mmap='r')
 # model_1800_erw = KeyedVectors.load("aligned\erw\\1800erw_word2vec.model", mmap='r')
-model_grimm = Word2Vec.load("aligned\grimm\\1800_grimm_word2vec_aligned.model")
+# model_grimm = Word2Vec.load("aligned\grimm\\1800_grimm_word2vec_aligned.model")
 #model_grimm = Word2Vec.load("aligned\grimm\\1800erw_word2vec.model")
 dn = os.path.abspath('classifier.py')
 parent_dir = os.path.join(os.path.dirname(dn),'corpora\processed\century')
@@ -65,9 +65,9 @@ def sentence_vec(sentence,year):
     sentence = sentence.replace(" ","")
     sentence = sentence.split(",")
     # for train/test corpus:
-    #model = model_1600 if year == 1600 else model_1700 if year == 1700 else model_1800
+    model = model_1600 if year == 1600 else model_1700 if year == 1700 else model_1800
     # for erw-corpus:
-    model = model_1600_erw if year == 1600 else model_1700_erw if year == 1700 else model_1800_erw
+    # model = model_1600_erw if year == 1600 else model_1700_erw if year == 1700 else model_1800_erw
     # for grimm-corpus:
     #model = model_grimm
     counter =0
@@ -173,19 +173,19 @@ def create_train_test():
 
 #create_data_pickle(200000)
 #create_data_pickle()
-#create_train_test()
+# create_train_test()
 
 #load and print train/test
 def create_classifier():
     #grimm + dta corpus:
-    '''X_train = load("data\combined\X_train_200_comb.joblib")
-    X_test=load("data\combined\X_test_200_comb.joblib")
-    y_train=load("data\combined\y_train_200_comb.joblib")
-    y_test=load("data\combined\y_test_200_comb.joblib") '''
-    X_train =load("data\centuries\X_train_b.joblib")
+    X_train = load("data\centuries\X_train_200.joblib")
+    X_test=load("data\centuries\X_test_200.joblib")
+    y_train=load("data\centuries\y_train_200.joblib")
+    y_test=load("data\centuries\y_test_200.joblib") 
+    '''X_train =load("data\centuries\X_train_b.joblib")
     X_test=load("data\centuries\X_test_b.joblib")
     y_train=load("data\centuries\y_train_b.joblib")
-    y_test=load("data\centuries\y_test_b.joblib")
+    y_test=load("data\centuries\y_test_b.joblib")'''
 
     unique_train, counts_train = np.unique(y_train, return_counts=True)
     unique_test, counts_test = np.unique(y_test, return_counts=True)
@@ -194,29 +194,28 @@ def create_classifier():
 
     # naive Bayes:
     # normalize  (lots of negatives in the vectors)
-    scaler = MinMaxScaler()
+    '''scaler = MinMaxScaler()
     scaled_X_test = scaler.fit_transform(X_test)
     scaled_X_train = scaler.fit_transform(X_train)
     classifier_nb = MultinomialNB()
     classifier_nb.fit(scaled_X_train,y_train)
     prediction=classifier_nb.predict(scaled_X_test)
-    dump(classifier_nb, 'classifier\centuries\\nb_centuries_b.joblib')
-    print("\n\nNaive Bayes Classifier:\n")
- 
+    dump(classifier_nb, 'classifier\centuries\\nb_centuries.joblib')
+    print("\n\nNaive Bayes Classifier:\n")'''
 
     #logistic Regression:
     # For multiclass problems, only ‘newton-cg’, ‘sag’, ‘saga’ and ‘lbfgs’ handle multinomial loss; #multi_class = auto -> multinomial
     '''classifier_logR = LogisticRegression(C=1.0,penalty='l2', solver='sag').fit(X_train,y_train) #c:regularization (trust this data alot/less values from 0.001 - 1k)
     prediction = classifier_logR.predict(X_test)
-    dump(classifier_logR, 'classifier\centuries\logR_centuries_b.joblib')
+    dump(classifier_logR, 'classifier\centuries\logR_centuries.joblib')
     print("\n\nLogistic Regression Classifier:\n With values: c=1; penalty=L2, solver=sag:\n ")'''
-
+    
     # Decisiontree:
-    '''classifier_Dtree = DecisionTreeClassifier(max_depth=20,min_samples_leaf=5,criterion='entropy') #check criterion, min_leaf=1 best for few classes
+    classifier_Dtree = DecisionTreeClassifier(max_depth=20,min_samples_leaf=5,criterion='log_loss') #check criterion, min_leaf=1 best for few classes
     classifier_Dtree = classifier_Dtree.fit(X_train,y_train)
     prediction = classifier_Dtree.predict(X_test)
-    dump(classifier_Dtree, 'classifier\centuries\Dtree_centuries_b.joblib')
-    print("\n\nDecision Tree Classifier:\n With values: depth=20; criterion=entropy, min_samples_leaf=5\n ")'''
+    dump(classifier_Dtree, 'classifier\centuries\Dtree_centuries.joblib')
+    print("\n\nDecision Tree Classifier:\n With values: depth=20; criterion=log_loss, min_samples_leaf=5\n ")
 
     #print classifier results:
     print("classification report: \n",metrics.classification_report(y_test, prediction))

@@ -72,11 +72,11 @@ def proc_files_in_dir(txt_src,output_src,year):
         
 
 ### new
-parent_dir = os.path.join(os.path.dirname(dn),'corpora\dta\Belletristik') # make args
+'''parent_dir = os.path.join(os.path.dirname(dn),'corpora\dta\Belletristik') # make args
 for dir in os.listdir(parent_dir):
     #if dir/file check or NO FILES ON THIS LEVEL
     child_dir = os.path.join(parent_dir,dir)
-    proc_files_in_dir(child_dir, output_src, dir)
+    proc_files_in_dir(child_dir, output_src, dir)'''
         
 
 
