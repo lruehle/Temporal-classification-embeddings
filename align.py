@@ -64,10 +64,17 @@ model_grimm = load_model("aligned\grimm\\1800_grimm_word2vec_aligned.model")
 model_erw_1 = load_model("models_erw\\1600erw_word2vec.model")
 model_erw_2 = load_model("models_erw\\1700erw_word2vec.model")
 model_erw_3 = load_model("models_erw\\1800erw_word2vec.model")'''
-
+#model_skip_1 = load_model("models_skipgram\\1600_skipgram.model")
+model_skip_1 = load_model("aligned\skip\\1600_skip_align.model")
+# model_skip_2 = load_model("models_skipgram\\1700_skipgramm.model")
+model_skip_2 = load_model("aligned\skip\\1700_skip_align.model")
+# model_skip_3 = load_model("models_skipgram\\1800_skipgram.model")
+model_skip_3 = load_model("aligned\skip\\1800_skip_align.model")
 #aligning models:
 # print("aligning 1800erw to 1800\nvocab:\n")
-# aligned_model= align_embeddings.smart_procrustes_align_gensim(model3, model_erw_3)
-# aligned_model.save("aligned\erw\\1800erw_old.model")
+# aligned_model= align_embeddings.smart_procrustes_align_gensim(model_skip_2, model_skip_1)
+# aligned_model.save("aligned\skip\\1600_skip_align.model")
 
- 
+'''print("vocab length 1600_skip Embeddings",len(model_skip_1.wv))
+print("vocab length 1700_skip Embeddings",len(model_skip_2.wv))
+print("vocab length 1800_skip Embeddings",len(model_skip_3.wv))'''

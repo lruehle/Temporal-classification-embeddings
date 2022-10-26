@@ -61,7 +61,7 @@ def proc_files_in_dir(txt_src,output_src,year):
                 df = pd.read_csv(file_path, sep=".\\n", header=None,names=["txt","year"],engine="python") 
                 #print(df.head())
                 df= df[df['txt'].str.count(' ') > 2] #drop lines with only one or two words -> references to role/active speaker etc.
-                #df['txt'] = lemma_for_grimm(df['txt'])
+                df['txt'] = lemma_for_grimm(df['txt'])
                 df['txt'] = df['txt'].apply(remove_stop_words)
                 df = remove_umlauts(df)
                 df['tokenized'] = df['txt'].map(preproc)
