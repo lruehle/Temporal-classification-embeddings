@@ -60,7 +60,7 @@ def create_embedding(input_file_src):
     word2v_model = Word2Vec(vector_size=100,
                     window=5,
                     min_count=3,
-                    sg=1    ) #test difference in skip gram & Cbow (Cbow: faster & good for big datasets, skip gram better for rare words)
+                    sg=1) 
 
     print(word2v_model) 
     word2v_model.build_vocab(sentences)            
@@ -70,11 +70,11 @@ def create_embedding(input_file_src):
                         callbacks=[loss_logger],
                         compute_loss=True,
                         epochs=12)
-    word2v_model.save("models_skipgram\\1800_skipgramm.model")#saving model
+    word2v_model.save("models_skipgram\\grimm_1800_skipgramm.model")#saving model
     word_vectors=word2v_model.wv
-    word_vectors.save("models_skipgram\\1800_skipgramm.wordvectors")
+    word_vectors.save("models_skipgram\\grimm_1800_skipgramm.wordvectors")
     
-#create_embedding("1700")
+# create_embedding("1700")
 
 ### auto train model for each timeframe
 '''

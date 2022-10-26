@@ -61,7 +61,7 @@ def proc_files_in_dir(txt_src,output_src,year):
                 df = pd.read_csv(file_path, sep=".\\n", header=None,names=["txt","year"],engine="python") 
                 #print(df.head())
                 df= df[df['txt'].str.count(' ') > 2] #drop lines with only one or two words -> references to role/active speaker etc.
-                #df['txt'] = lemma_for_grimm(df['txt'])
+                df['txt'] = lemma_for_grimm(df['txt'])
                 df['txt'] = df['txt'].apply(remove_stop_words)
                 df = remove_umlauts(df)
                 df['tokenized'] = df['txt'].map(preproc)
@@ -72,11 +72,11 @@ def proc_files_in_dir(txt_src,output_src,year):
         
 
 ### new
-parent_dir = os.path.join(os.path.dirname(dn),'corpora\dta\Belletristik') # make args
+'''parent_dir = os.path.join(os.path.dirname(dn),'corpora\dta\Belletristik') # make args
 for dir in os.listdir(parent_dir):
     #if dir/file check or NO FILES ON THIS LEVEL
     child_dir = os.path.join(parent_dir,dir)
-    proc_files_in_dir(child_dir, output_src, dir)
+    proc_files_in_dir(child_dir, output_src, dir)'''
         
 
 

@@ -111,13 +111,18 @@ print(model3.wv.most_similar(model_erw_2.wv["baum"],topn=3))
 print(model2.wv.most_similar(model_erw_2.wv["baum"],topn=3))'''
 
 
-model_skip_1 = load_model("models_skipgram\\1600_skipgramm.model")
+model_skip_1 = load_model("models_skipgram\\1600_skipgram.model")
 model_skip_2 = load_model("aligned\skip\\1700_skip_align.model")
 model_skip_3 = load_model("aligned\skip\\1800_skip_align.model")
 
-print("1600_skip most similar 'baum'",model_skip_1.wv.most_similar(model_skip_2.wv["baum"],topn=3))
-print("1700_skip most similar 'baum'",model_skip_2.wv.most_similar(model_skip_3.wv["baum"],topn=3))
-print("1800_skip most similar 'baum'",model_skip_3.wv.most_similar(model_skip_1.wv["baum"],topn=3))
+print("1600_skip most similar 'opfer'",model_skip_1.wv.most_similar("opfer",topn=4))
+print("1700_skip most similar 'opfer'",model_skip_2.wv.most_similar("opfer",topn=4))
+print("1800_skip most similar 'opfer'",model_skip_3.wv.most_similar("opfer",topn=4))
+'''
+print("1600_skip most similar to: 1700_skip 'baum'",model_skip_1.wv.most_similar(model_skip_2.wv["baum"],topn=3))
+print("1700_skip most similar to: 1800_skip 'baum'",model_skip_2.wv.most_similar(model_skip_3.wv["baum"],topn=3))
+print("1800_skip most similar to: 1600_skip 'baum'",model_skip_3.wv.most_similar(model_skip_1.wv["baum"],topn=3))
 print("1600_skip most similar: pos 'koenig','frau', neg: 'mann': ",model_skip_1.wv.most_similar(positive=['koenig', 'frau'], negative=['mann'],topn=3),"\n")  
 print("1700_skip most similar: pos 'koenig','frau', neg: 'mann': ",model_skip_2.wv.most_similar(positive=['koenig', 'frau'], negative=['mann'],topn=3),"\n")  
 print("1800_skip most similar: pos 'koenig','frau', neg: 'mann': ",model_skip_3.wv.most_similar(positive=['koenig', 'frau'], negative=['mann'],topn=3),"\n")  
+'''
