@@ -19,6 +19,7 @@ from sklearn.tree import DecisionTreeClassifier
 
 ### No.4 in pipeline: prepare data for classifier & train
 
+
 # model_1600 = Word2Vec.load("models_century\\1600_word2vec.model")
 # model_1700 = Word2Vec.load("aligned\century\\1700_word2vec.model")
 # model_1800 = Word2Vec.load("aligned\century\\1800_word2vec.model")
@@ -34,6 +35,7 @@ model_1800 = Word2Vec.load("aligned\skip_erw\\1800erw_skip.model")
 # model_1800_erw = Word2Vec.load("aligned\erw\\1800erw_old.model")
 # model_grimm = Word2Vec.load("aligned\grimm\\1800_grimm_word2vec_aligned.model")
 model_grimm = Word2Vec.load("aligned\skip_grimm\\1800grimm_skip.model")
+
 dn = os.path.abspath('classifier.py')
 parent_dir = os.path.join(os.path.dirname(dn),'corpora\processed')
 data_dir = os.path.join(os.path.dirname(dn),'data')
@@ -68,7 +70,9 @@ def sentence_vec(sentence,year):
     sentence = sentence.replace("'","")
     sentence = sentence.replace(" ","")
     sentence = sentence.split(",")
+
     # for train/test corpus cBow/Skip:
+
     model = model_1600 if year == 1600 else model_1700 if year == 1700 else model_1800
     # for erw-corpus:
     # model = model_1600_erw if year == 1600 else model_1700_erw if year == 1700 else model_1800_erw
@@ -178,11 +182,12 @@ def create_train_test():
 
 #create_data_pickle(200000)
 #create_data_pickle()
-#create_train_test()
+# create_train_test()
 
 #load and print train/test
 def create_classifier():
     #grimm + dta corpus:
+
     '''X_train = load("data\combined\X_train_200_comb.joblib")
     X_test=load("data\combined\X_test_200_comb.joblib")
     y_train=load("data\combined\y_train_200_comb.joblib")
@@ -191,6 +196,7 @@ def create_classifier():
     X_test=load("data\skip\X_test_200.joblib")
     y_train=load("data\skip\y_train_200.joblib")
     y_test=load("data\skip\y_test_200.joblib")
+
 
     unique_train, counts_train = np.unique(y_train, return_counts=True)
     unique_test, counts_test = np.unique(y_test, return_counts=True)
@@ -205,15 +211,18 @@ def create_classifier():
     classifier_nb = MultinomialNB()
     classifier_nb.fit(scaled_X_train,y_train)
     prediction=classifier_nb.predict(scaled_X_test)
+    
     dump(classifier_nb, 'classifier\skip\\nb_skip.joblib')
     print("\n\nNaive Bayes Classifier:\n")
     print("classification report: \n",metrics.classification_report(y_test, prediction))
     print(pd.crosstab(prediction,y_test, rownames=['Predicted'], colnames=['True value'], margins=True))'''
 
+
     #logistic Regression:
     # For multiclass problems, only ‘newton-cg’, ‘sag’, ‘saga’ and ‘lbfgs’ handle multinomial loss; #multi_class = auto -> multinomial
     classifier_logR = LogisticRegression(C=1,penalty='l2', solver='sag').fit(X_train,y_train) #c:regularization (trust this data alot/less values from 0.001 - 1k)
     prediction = classifier_logR.predict(X_test)
+
     dump(classifier_logR, 'classifier\skip\logR_skip.joblib')
     print("\n\nLogistic Regression Classifier:\n With values: c=1; penalty=L2, solver=sag:\n ")
 

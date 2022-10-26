@@ -14,6 +14,7 @@ csv_data = os.path.join(output_src,'1800_grimm_corpus_proc.csv')
 model_path = os.path.join(os.path.dirname(dn),"aligned\skip_grimm\\1800grimm_skip.model")
 
 #models
+
 model_grimm = align.load_model("models_skipgram\\grimm_1800_skipgramm.model")
 #model_grimm_aligned = align.load_model("aligned\grimm\\1800erw_word2vec.model")
 model1 = align.load_model("aligned\skip\\1600_skip_align.model")
@@ -93,7 +94,9 @@ def tokens_to_vec():
 
 def get_classified():
     # sentence_vecs = classifier.load_pickle('data\erw\master_vecs_erw.pkl') 
+
     sentence_vecs = classifier.load_pickle('data\skip_erw\master_vecs_skip_grimm.pkl')
+
     #sentence_vecs['year'] = 1800.0
     #df = classifier.get_all_df(output_src)
     #classifier.year_distribution(sentence_vecs)
@@ -103,9 +106,11 @@ def get_classified():
     scaled_X = scaler.fit_transform(X)
     # normalized_X = normalize(scaled_X, norm='l1', axis=1, copy=True)
     #print("your vectors are: \n",sentence_vecs.head())
+
     classifier.classify_this(scaled_X,classifier_nb_skip, sentence_vecs['year'])#for nb restructure vectors for negative values
     print("skip Naive Bayes (200k) on grimm-data: \n")
     # print("LogR (200k,c1,l2,sag) on grimm-data: \n")
+
     # print("Decision Tree (200k,l5,d20,logloss) on grimm-data: \n")
     #classifier.classify_this(sentence_vecs,classifier_nb)#for nb restructure vectors for negative values
 
