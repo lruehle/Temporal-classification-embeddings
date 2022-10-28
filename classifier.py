@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score,confusion_matrix
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import MinMaxScaler, normalize
 from sklearn.metrics import classification_report
 from sklearn import metrics
@@ -225,6 +226,11 @@ def create_classifier():
 
     dump(classifier_logR, 'classifier\skip\logR_skip.joblib')
     print("\n\nLogistic Regression Classifier:\n With values: c=1; penalty=L2, solver=sag:\n ")
+
+    '''classifier_knn = KNeighborsClassifier(n_neighbors=3).fit(X_train,y_train)
+    prediction = classifier_knn.predict(X_test)
+    dump(classifier_knn, 'classifier\skip\knn_skip.joblib')
+    print("\n\nK nearest neighbour Classifier:\n With values:\n ")'''
 
     # Decisiontree:
     '''classifier_Dtree = DecisionTreeClassifier(max_depth=20,min_samples_leaf=5,criterion='log_loss') #check criterion, min_leaf=1 best for few classes
