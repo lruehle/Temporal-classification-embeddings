@@ -47,7 +47,7 @@ def load_pickle(pickle_path):
 
 def get_all_df(parent_dir):
     #for all data with >1 csvs
-    all_files = glob.glob(os.path.join(parent_dir, "*_corpus_proc.csv"))
+    all_files = glob.glob(os.path.join(parent_dir, "*_corpus_skip_proc.csv"))
     df = pd.concat((pd.read_csv(f,sep=";",header=None,names=["txt","year","tokenized"]) for f in all_files), ignore_index=True)
     # for grimm:
     # df = pd.read_csv(os.path.join('corpora\processed\grimm','1800_corpus_proc_grimm.csv'),sep=";",header=None,names=["txt","year","tokenized"])
@@ -59,10 +59,25 @@ def year_distribution(data_f):
      #   df = get_all_df()
     print(data_f.groupby('year').size())
     data_f.groupby('year').size().plot(kind='bar')
+#get sentences
+#get words in sentences
+# word, year, vec pickle for all words
+def word_vec(sentence,year):
+    sentence = sentence.replace('[','')
+    sentence = sentence.replace(']','')
+    sentence = sentence.replace("'","")
+    sentence = sentence.replace(" ","")
+    sentence = sentence.split(",")
+    word_vecs =  []
+    model = model_1600 if year == 1600 else model_1700 if year == 1700 else model_1800
+    for word in sentence:
+        if word in model.wv:
+            vec =model.wv[word].tolist()
+            row = [year]
+            row.extend(vec) 
+            word_vecs.append(row)
+    return word_vecs #returns list of all word vectors in sentence
 
-
-# should be also used by classifyier to convert test data, so check if in vocab necessary
-# sentences should be list of tokens (?)
 def sentence_vec(sentence,year):
     vec_sentence = np.zeros(100) #all models have vector size of 100
     ##super weirdnes of pandas to_csv/read.csv adding quotation marks
@@ -96,46 +111,42 @@ def sentences_to_vec(sentences,years):
     sentence_vex = list()
     counter = 0
     for idx,item in enumerate(sentences):
-        #arr = sentence_vec(item)
-        #print(arr)
         if (counter == 49999):
             print('Progress report:\n sentence to vec at 50000')
             counter = 0
         counter += 1
         year = years.iloc[idx]
-        vecs = list(sentence_vec(item,year))
-        sentence_vex.append(vecs)
-        #for some reason pd stores vec in rows instead of cols??? extreme runtime improvement list.append vs. pd.concat 5h -> 2min
-        '''vecs = pd.DataFrame(sentence_vec(item,year)).T
-        #print(vecs.head())
-        sentence_vecs = pd.concat([sentence_vecs,vecs],axis=0,ignore_index=True)'''
-    #print(sentence_vex[1])
+        #vecs = list(sentence_vec(item,year))
+        vecs = word_vec(item,year) 
+        #sentence_vex.append(vecs) 
+        sentence_vex.extend(vecs) 
     sentence_vecs= pd.DataFrame(sentence_vex)
     print(sentence_vecs.head())
     return sentence_vecs
 
 def create_data_pickle(data_size=10000):
     all_df = get_all_df(parent_dir)
-    #year_distribution(all_df)
+    year_distribution(all_df)
     all_df = all_df.groupby("year").sample(n=data_size, random_state=1)
     all_df = all_df.sample(frac=1).reset_index(drop=True) #shuffle values
     print(all_df.head())
     sentence_vecs = pd.DataFrame()
     sentence_vecs = sentences_to_vec(all_df['tokenized'],all_df['year'])
     #sentence_vecs = sentences_to_vec(all_df[:data_size]['tokenized']) no longer needed, as sample is taken now
+    #print(sentence_vecs.head())
     print(all_df.shape)
     print(all_df.shape[0])
     print(sentence_vecs.shape)
-    sentence_vecs['year'] = all_df['year']
+    #sentence_vecs['year'] = all_df['year']
     print("\n vec head: ",sentence_vecs.head())
-    sentence_vecs.to_pickle('data\skip\master_vecs_skip_200k.pkl')
+    sentence_vecs.to_pickle('data\skip\master_vecs_skipwords_erw_10k.pkl')
 
-#create_data_pickle(200000)
+# create_data_pickle(6000)
 #create train/test data:
 #load & check
 #! Change for Bayes!
 def create_train_test():
-    sentence_vecs = load_pickle('data\skip\master_vecs_skip_200k.pkl') 
+    sentence_vecs = load_pickle('data\skip\master_vecs_skipwords_10k.pkl') 
     '''sentence_vecs_grimm = load_pickle('data\grimm\master_vecs_grimm_all.pkl')
     sentence_vecs_grimm['year'] = 1800.0
     frames= [sentence_vecs1, sentence_vecs_grimm]
@@ -145,13 +156,16 @@ def create_train_test():
     print("creating train_test for: \n",sentence_vecs.head())
     #print("size 1: \n",sentence_vecs1.shape)
     print("size total: \n",sentence_vecs.shape)
-    year_distribution(sentence_vecs)
+    #year_distribution(sentence_vecs)
 
     #training split:
-    year =sentence_vecs.columns[-1]
-    all_vecs =sentence_vecs.columns[:-1]
-    X=sentence_vecs[all_vecs].values
+    year =sentence_vecs.columns[0]
+    all_ftrs = sentence_vecs.columns[1:102]
+    #all_ftrs = sentence_vecs.drop(0,axis=1)
+    #all_ftrs = sentence_vecs.columns[]
     y=sentence_vecs[year].values
+    X=sentence_vecs[all_ftrs].values
+    
 
     # normalize for Naive Bayes (lots of negatives in the vectors)
     #scaler = MinMaxScaler()
@@ -176,13 +190,13 @@ def create_train_test():
     dump(y_train,"data\combined\y_train_200_comb.joblib")
     dump(y_test,"data\combined\y_test_200_comb.joblib")'''
 
-    dump(X_train,"data\skip\X_train_200.joblib")
-    dump(X_test,"data\skip\X_test_200.joblib")
-    dump(y_train,"data\skip\y_train_200.joblib")
-    dump(y_test,"data\skip\y_test_200.joblib")
+    dump(X_train,"data\skip\X_train_word_10.joblib")
+    dump(X_test,"data\skip\X_test_word_10.joblib")
+    dump(y_train,"data\skip\y_train_word_10.joblib")
+    dump(y_test,"data\skip\y_test_word_10.joblib")
 
-#create_data_pickle(200000)
-#create_data_pickle()
+
+
 # create_train_test()
 
 #load and print train/test
@@ -193,10 +207,10 @@ def create_classifier():
     X_test=load("data\combined\X_test_200_comb.joblib")
     y_train=load("data\combined\y_train_200_comb.joblib")
     y_test=load("data\combined\y_test_200_comb.joblib") '''
-    X_train =load("data\skip\X_train_200.joblib")
-    X_test=load("data\skip\X_test_200.joblib")
-    y_train=load("data\skip\y_train_200.joblib")
-    y_test=load("data\skip\y_test_200.joblib")
+    X_train =load("data\skip\X_train_word_10.joblib")
+    X_test=load("data\skip\X_test_word_10.joblib")
+    y_train=load("data\skip\y_train_word_10.joblib")
+    y_test=load("data\skip\y_test_word_10.joblib")
 
 
     unique_train, counts_train = np.unique(y_train, return_counts=True)
@@ -224,7 +238,7 @@ def create_classifier():
     classifier_logR = LogisticRegression(C=1,penalty='l2', solver='sag').fit(X_train,y_train) #c:regularization (trust this data alot/less values from 0.001 - 1k)
     prediction = classifier_logR.predict(X_test)
 
-    dump(classifier_logR, 'classifier\skip\logR_skip.joblib')
+    dump(classifier_logR, 'classifier\skip\logR_skip_word.joblib')
     print("\n\nLogistic Regression Classifier:\n With values: c=1; penalty=L2, solver=sag:\n ")
 
     '''classifier_knn = KNeighborsClassifier(n_neighbors=3).fit(X_train,y_train)
@@ -244,7 +258,7 @@ def create_classifier():
     #print("confusion matrix for 1600, 1700, 1800 (x=true; y=predicted):\n",confusion_matrix(y_test,prediction))
     print(pd.crosstab(prediction,y_test, rownames=['Predicted'], colnames=['True value'], margins=True))
 
-#create_classifier()
+# create_classifier()
 
 def classify_this(data_vecs,classifier,truthy=None):
     prediction=classifier.predict(data_vecs)
@@ -253,25 +267,4 @@ def classify_this(data_vecs,classifier,truthy=None):
     if truthy is not None:
         print("classification report: \n",metrics.classification_report(truthy, prediction))
         print(pd.crosstab(prediction,truthy, rownames=['Predicted'], colnames=['True value'], margins=True))
-
-
-
-#vector_df = pd.DataFrame()
-def sentence_vec_to_csv():
-    for file in os.listdir(parent_dir):
-        #if dir/file check or ONLY FILES ON THIS LEVEL
-        child_path = os.path.join(parent_dir,file)
-        df = pd.read_csv(child_path,sep=";",header=None,names=["txt","year","tokenized"])#converters={'tokenized': lambda x: x[1:-1].split(',')}) 
-        df['sentence_vec'] = [sentence_vec(item) for item in df['tokenized']]
-        #vector_df['sentence_vec'] += df
-        #df.drop('txt',axis=1)
-        # df.drop('tokenized',axis=1)
-        df.to_csv(child_path,mode="w",index=False,header=False,sep=";")
-        print(df.head())
-        print(file+" is done")
-        #does it make sense to store sentence vec in multi. columns so that each vector[i] can be compared? ->yup! now pickle, 10x as fast
-#sentence_vec_to_csv()
-
-
-
 
