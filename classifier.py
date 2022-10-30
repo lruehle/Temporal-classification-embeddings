@@ -25,17 +25,17 @@ from sklearn.tree import DecisionTreeClassifier
 # model_1700 = Word2Vec.load("aligned\century\\1700_word2vec.model")
 # model_1800 = Word2Vec.load("aligned\century\\1800_word2vec.model")
 
-'''model_1600 = Word2Vec.load("models_skipgram\\1600_skipgram.model")
-model_1700 = Word2Vec.load("aligned\skip\\1700_skip_align.model")
-model_1800 = Word2Vec.load("aligned\skip\\1800_skip_align.model")'''
-model_1600 = Word2Vec.load("aligned\skip_erw\\1600erw_skip.model")
-model_1700 = Word2Vec.load("aligned\skip_erw\\1700erw_skip.model")
-model_1800 = Word2Vec.load("aligned\skip_erw\\1800erw_skip.model")
+'''model_1600 = Word2Vec.load("aligned\cbow\\1600_cbow_align.model")
+model_1700 = Word2Vec.load("aligned\cbow\\1700_cbow_align.model")
+model_1800 = Word2Vec.load("aligned\cbow\\1800_cbow_align.model")'''
+model_1600erw = Word2Vec.load("aligned\cbow_erw\\1600erw_cbow.model")
+model_1700erw = Word2Vec.load("aligned\cbow_erw\\1700erw_cbow.model")
+model_1800erw = Word2Vec.load("aligned\cbow_erw\\1800erw_cbow.model")
 # model_1600_erw = Word2Vec.load("aligned\erw\\1600erw_old.model")
 # model_1700_erw = Word2Vec.load("aligned\erw\\1700erw_old.model")
 # model_1800_erw = Word2Vec.load("aligned\erw\\1800erw_old.model")
 # model_grimm = Word2Vec.load("aligned\grimm\\1800_grimm_word2vec_aligned.model")
-model_grimm = Word2Vec.load("aligned\skip_grimm\\1800grimm_skip.model")
+# model_grimm = Word2Vec.load("aligned\skip_grimm\\1800grimm_skip.model")
 
 dn = os.path.abspath('classifier.py')
 parent_dir = os.path.join(os.path.dirname(dn),'corpora\processed')
@@ -47,7 +47,7 @@ def load_pickle(pickle_path):
 
 def get_all_df(parent_dir):
     #for all data with >1 csvs
-    all_files = glob.glob(os.path.join(parent_dir, "*_corpus_proc.csv"))
+    all_files = glob.glob(os.path.join(parent_dir, "*_corpus_skip_proc.csv"))
     df = pd.concat((pd.read_csv(f,sep=";",header=None,names=["txt","year","tokenized"]) for f in all_files), ignore_index=True)
     # for grimm:
     # df = pd.read_csv(os.path.join('corpora\processed\grimm','1800_corpus_proc_grimm.csv'),sep=";",header=None,names=["txt","year","tokenized"])
@@ -73,10 +73,9 @@ def sentence_vec(sentence,year):
     sentence = sentence.split(",")
 
     # for train/test corpus cBow/Skip:
-
-    model = model_1600 if year == 1600 else model_1700 if year == 1700 else model_1800
+    #model = model_1600 if year == 1600 else model_1700 if year == 1700 else model_1800
     # for erw-corpus:
-    # model = model_1600_erw if year == 1600 else model_1700_erw if year == 1700 else model_1800_erw
+    model = model_1600erw if year == 1600 else model_1700erw if year == 1700 else model_1800erw
     # for grimm-corpus:
     #model = model_grimm
     counter =0
@@ -116,8 +115,8 @@ def sentences_to_vec(sentences,years):
 
 def create_data_pickle(data_size=10000):
     all_df = get_all_df(parent_dir)
-    #year_distribution(all_df)
-    all_df = all_df.groupby("year").sample(n=data_size, random_state=1)
+    year_distribution(all_df)
+    #all_df = all_df.groupby("year").sample(n=data_size, random_state=1)
     all_df = all_df.sample(frac=1).reset_index(drop=True) #shuffle values
     print(all_df.head())
     sentence_vecs = pd.DataFrame()
@@ -128,14 +127,14 @@ def create_data_pickle(data_size=10000):
     print(sentence_vecs.shape)
     sentence_vecs['year'] = all_df['year']
     print("\n vec head: ",sentence_vecs.head())
-    sentence_vecs.to_pickle('data\skip\master_vecs_skip_200k.pkl')
+    sentence_vecs.to_pickle('data\cbow_erw\master_vecs_cbow_erw.pkl')
 
-#create_data_pickle(200000)
+# create_data_pickle(200000)
 #create train/test data:
 #load & check
 #! Change for Bayes!
 def create_train_test():
-    sentence_vecs = load_pickle('data\skip\master_vecs_skip_200k.pkl') 
+    sentence_vecs = load_pickle('data\cbow\master_vecs_cbow_200k.pkl') 
     '''sentence_vecs_grimm = load_pickle('data\grimm\master_vecs_grimm_all.pkl')
     sentence_vecs_grimm['year'] = 1800.0
     frames= [sentence_vecs1, sentence_vecs_grimm]
@@ -170,16 +169,11 @@ def create_train_test():
     print("testing shape vectors: ",X_test.shape)
     print("testing shape years: ",y_test.shape)
     #save data 
-    # comb
-    '''dump(X_train,"data\combined\X_train_200_comb.joblib")
-    dump(X_test,"data\combined\X_test_200_comb.joblib")
-    dump(y_train,"data\combined\y_train_200_comb.joblib")
-    dump(y_test,"data\combined\y_test_200_comb.joblib")'''
-
-    dump(X_train,"data\skip\X_train_200.joblib")
-    dump(X_test,"data\skip\X_test_200.joblib")
-    dump(y_train,"data\skip\y_train_200.joblib")
-    dump(y_test,"data\skip\y_test_200.joblib")
+    
+    dump(X_train,"data\cbow\X_train_200.joblib")
+    dump(X_test,"data\cbow\X_test_200.joblib")
+    dump(y_train,"data\cbow\y_train_200.joblib")
+    dump(y_test,"data\cbow\y_test_200.joblib")
 
 #create_data_pickle(200000)
 #create_data_pickle()
@@ -187,16 +181,11 @@ def create_train_test():
 
 #load and print train/test
 def create_classifier():
-    #grimm + dta corpus:
 
-    '''X_train = load("data\combined\X_train_200_comb.joblib")
-    X_test=load("data\combined\X_test_200_comb.joblib")
-    y_train=load("data\combined\y_train_200_comb.joblib")
-    y_test=load("data\combined\y_test_200_comb.joblib") '''
-    X_train =load("data\skip\X_train_200.joblib")
-    X_test=load("data\skip\X_test_200.joblib")
-    y_train=load("data\skip\y_train_200.joblib")
-    y_test=load("data\skip\y_test_200.joblib")
+    X_train =load("data\cbow\X_train_200.joblib")
+    X_test=load("data\cbow\X_test_200.joblib")
+    y_train=load("data\cbow\y_train_200.joblib")
+    y_test=load("data\cbow\y_test_200.joblib")
 
 
     unique_train, counts_train = np.unique(y_train, return_counts=True)
@@ -206,26 +195,25 @@ def create_classifier():
 
     # naive Bayes:
     # normalize  (lots of negatives in the vectors)
-    '''scaler = MinMaxScaler()
+    scaler = MinMaxScaler()
     scaled_X_test = scaler.fit_transform(X_test)
     scaled_X_train = scaler.fit_transform(X_train)
     classifier_nb = MultinomialNB()
     classifier_nb.fit(scaled_X_train,y_train)
     prediction=classifier_nb.predict(scaled_X_test)
     
-    dump(classifier_nb, 'classifier\skip\\nb_skip.joblib')
+    dump(classifier_nb, 'classifier\cbow\\nb_cbow.joblib')
     print("\n\nNaive Bayes Classifier:\n")
     print("classification report: \n",metrics.classification_report(y_test, prediction))
-    print(pd.crosstab(prediction,y_test, rownames=['Predicted'], colnames=['True value'], margins=True))'''
+    print(pd.crosstab(prediction,y_test, rownames=['Predicted'], colnames=['True value'], margins=True))
 
 
     #logistic Regression:
     # For multiclass problems, only ‘newton-cg’, ‘sag’, ‘saga’ and ‘lbfgs’ handle multinomial loss; #multi_class = auto -> multinomial
-    classifier_logR = LogisticRegression(C=1,penalty='l2', solver='sag').fit(X_train,y_train) #c:regularization (trust this data alot/less values from 0.001 - 1k)
+    '''classifier_logR = LogisticRegression(C=1,penalty='l2', solver='sag').fit(X_train,y_train) #c:regularization (trust this data alot/less values from 0.001 - 1k)
     prediction = classifier_logR.predict(X_test)
-
-    dump(classifier_logR, 'classifier\skip\logR_skip.joblib')
-    print("\n\nLogistic Regression Classifier:\n With values: c=1; penalty=L2, solver=sag:\n ")
+    dump(classifier_logR, 'classifier\cbow\logR_cbow.joblib')
+    print("\n\nLogistic Regression Classifier:\n With values: c=1; penalty=L2, solver=sag:\n ")'''
 
     '''classifier_knn = KNeighborsClassifier(n_neighbors=3).fit(X_train,y_train)
     prediction = classifier_knn.predict(X_test)
@@ -236,7 +224,7 @@ def create_classifier():
     '''classifier_Dtree = DecisionTreeClassifier(max_depth=20,min_samples_leaf=5,criterion='log_loss') #check criterion, min_leaf=1 best for few classes
     classifier_Dtree = classifier_Dtree.fit(X_train,y_train)
     prediction = classifier_Dtree.predict(X_test)
-    dump(classifier_Dtree, 'classifier\skip\Dtree_skip.joblib')
+    dump(classifier_Dtree, 'classifier\cbow\Dtree_cbow.joblib')
     print("\n\nDecision Tree Classifier:\n With values: depth=20; criterion=log_loss, min_samples_leaf=5\n ")'''
 
     #print classifier results:
@@ -244,7 +232,7 @@ def create_classifier():
     #print("confusion matrix for 1600, 1700, 1800 (x=true; y=predicted):\n",confusion_matrix(y_test,prediction))
     print(pd.crosstab(prediction,y_test, rownames=['Predicted'], colnames=['True value'], margins=True))
 
-#create_classifier()
+# create_classifier()
 
 def classify_this(data_vecs,classifier,truthy=None):
     prediction=classifier.predict(data_vecs)
