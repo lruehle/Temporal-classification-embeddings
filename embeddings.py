@@ -10,7 +10,7 @@ import pandas as pd
 
 
 dn = os.path.abspath('create_embeddings.py')
-input_file_src = os.path.join(os.path.dirname(dn),'corpora\processed\\1600_corpus_proc.csv')
+# input_file_src = os.path.join(os.path.dirname(dn),'corpora\processed\\1600_corpus_proc.csv')
 #input_src = os.path.join(input_file_src,'merged_file.csv')
 
 
@@ -18,7 +18,6 @@ input_file_src = os.path.join(os.path.dirname(dn),'corpora\processed\\1600_corpu
 # needs to be iterable & restartable
 # simple_preprocess returns tokens
 
-#old version, includes time and tokens as well, but reads line by line ->better for memory
 class My_Sentences(object):
     def __init__(self, dirname):
         self.dirname = dirname
@@ -47,16 +46,9 @@ class LossLogger(CallbackAny2Vec):
 loss_logger = LossLogger()
 
 
-def create_embedding(input_file_src):
+def create_embedding():
     
     sentences = My_Sentences(os.path.join(os.path.dirname(dn),'corpora\processed'))
-    #df = pd.read_csv(input_file_src, sep=";",header=None,names=["txt","year","tokenized"])
-    #print("\ncreating embeddings for: ",df.head())
-    #tokenized = df.txt
-    #tokenized = tokenized.fillna('').astype(str).apply(simple_preprocess,deacc=True,min_len=3,max_len=20)#easier than applying stuff to tokenized field (string issue)
-    #tokenized = df.tokenized
-    #sentences = tokenized
-    #sentences = My_Sentences(input_file_src)
     word2v_model = Word2Vec(vector_size=100,
                     window=5,
                     min_count=3,
@@ -70,18 +62,11 @@ def create_embedding(input_file_src):
                         callbacks=[loss_logger],
                         compute_loss=True,
                         epochs=12)
-    word2v_model.save("models_skipgram\\grimm_1800_skipgramm.model")#saving model
-    word_vectors=word2v_model.wv
-    word_vectors.save("models_skipgram\\grimm_1800_skipgramm.wordvectors")
+    word2v_model.save("models_skipgram\\1700skip_word2vec.model")#saving model
+    #word_vectors=word2v_model.wv
+    #word_vectors.save("models_skip_erw\\1700erw_skip_word2vec.wordvectors")
     
 # create_embedding("1700")
 
-### auto train model for each timeframe
-'''
-foreach file in processed folder:
-    run sentences on corpus
-    build model for sentences
-    save model & vectors
-'''
 
  

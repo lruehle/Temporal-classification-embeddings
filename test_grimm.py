@@ -11,19 +11,20 @@ from joblib import load
 dn = os.path.abspath('test_grimm.py')
 output_src = os.path.join(os.path.dirname(dn),'corpora\processed')
 csv_data = os.path.join(output_src,'1800_grimm_corpus_proc.csv')
-model_path = os.path.join(os.path.dirname(dn),"aligned\skip_grimm\\1800grimm_skip.model")
+# save_path = os.path.join(os.path.dirname(dn),"aligned\skip_grimm\\1800grimm_skip.model")
 
 #models
 
-model_grimm = align.load_model("models_skipgram\\grimm_1800_skipgramm.model")
+# model_grimm = align.load_model("models_skipgram\\grimm_1800_skipgramm.model")
 #model_grimm_aligned = align.load_model("aligned\grimm\\1800erw_word2vec.model")
 model1 = align.load_model("aligned\skip\\1600_skip_align.model")
 model2 = align.load_model("aligned\skip\\1700_skip_align.model")
 model3 = align.load_model("aligned\skip\\1800_skip_align.model")
-skip_1 = align.load_model("models_skipgram\\erw_1600_skipgramm.model")
+skip_1 = align.load_model("models_skipgram\\1600erw_skipgramm.model")
 skip_2 = align.load_model("models_skipgram\\erw_1700_skipgramm.model")
 skip_3 = align.load_model("models_skipgram\\erw_1800_skipgramm.model")
-
+#align_this_model = skip_2
+#base_model= model2
 
 #classifiers:
 classifier_nb = load('classifier\centuries\\nb_centuries_200.joblib')
@@ -42,9 +43,8 @@ classifier_dTree_skip = load('classifier\skip\\dTree_skip.joblib')
 
 
 # create one file out of all, preprocess and add year & token
-# hier eigentlich kein year mehr..vllt platzhalter?
 def process_grimm():
-    parent_dir = os.path.join(os.path.dirname(dn),'corpora\erw') # make args
+    parent_dir = os.path.join(os.path.dirname(dn),'corpora\erw')
     #dir name has to be year
     for dir in os.listdir(parent_dir):
         #if dir/file check or NO FILES ON THIS LEVEL
@@ -69,7 +69,7 @@ def create_grimm_emb():
 # create_grimm_emb()
 
 def align_grimm():
-    align.align_models(model3, model_grimm, model_path)
+    align.align_models(base_model, align_this_model, save_path)
 
 #align_grimm()
 
@@ -97,22 +97,16 @@ def get_classified():
 
     sentence_vecs = classifier.load_pickle('data\skip_erw\master_vecs_skip_grimm.pkl')
 
-    #sentence_vecs['year'] = 1800.0
-    #df = classifier.get_all_df(output_src)
-    #classifier.year_distribution(sentence_vecs)
     all_vecs =sentence_vecs.columns[:-1]
     X=sentence_vecs[all_vecs].values
     scaler = MinMaxScaler()
     scaled_X = scaler.fit_transform(X)
-    # normalized_X = normalize(scaled_X, norm='l1', axis=1, copy=True)
     #print("your vectors are: \n",sentence_vecs.head())
 
     classifier.classify_this(scaled_X,classifier_nb_skip, sentence_vecs['year'])#for nb restructure vectors for negative values
     print("skip Naive Bayes (200k) on grimm-data: \n")
     # print("LogR (200k,c1,l2,sag) on grimm-data: \n")
-
     # print("Decision Tree (200k,l5,d20,logloss) on grimm-data: \n")
-    #classifier.classify_this(sentence_vecs,classifier_nb)#for nb restructure vectors for negative values
 
-get_classified()
+#get_classified()
 #tokens_to_vec()
